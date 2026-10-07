@@ -28,10 +28,10 @@ RETURNING id, title, slug, body, author_id, published, created_at, updated_at
 `
 
 type CreateArticleParams struct {
-	Title     string
-	Slug      string
-	Body      string
-	Published bool
+	Title     string `json:"title"`
+	Slug      string `json:"slug"`
+	Body      string `json:"body"`
+	Published bool   `json:"published"`
 }
 
 func (q *Queries) CreateArticle(ctx context.Context, arg CreateArticleParams) (Article, error) {
@@ -114,8 +114,8 @@ LIMIT $2 OFFSET $1
 `
 
 type ListArticlesParams struct {
-	PageOffset int32
-	PageLimit  int32
+	PageOffset int32 `json:"page_offset"`
+	PageLimit  int32 `json:"page_limit"`
 }
 
 func (q *Queries) ListArticles(ctx context.Context, arg ListArticlesParams) ([]Article, error) {
@@ -162,11 +162,11 @@ RETURNING id, title, slug, body, author_id, published, created_at, updated_at
 `
 
 type UpdateArticleParams struct {
-	Title     sql.NullString
-	Slug      sql.NullString
-	Body      *string
-	Published sql.NullBool
-	ID        string
+	Title     sql.NullString `json:"title"`
+	Slug      sql.NullString `json:"slug"`
+	Body      *string        `json:"body"`
+	Published sql.NullBool   `json:"published"`
+	ID        string         `json:"id"`
 }
 
 func (q *Queries) UpdateArticle(ctx context.Context, arg UpdateArticleParams) (Article, error) {

@@ -6,18 +6,18 @@ import (
 	"flexgin/internal/httpx"
 )
 
-type Handler struct {
-	svc Service
+type ArticleHandler struct {
+	svc ArticleService
 }
 
-func NewHandler(svc Service) *Handler {
-	return &Handler{svc: svc}
+func NewArticleHandler(svc ArticleService) *ArticleHandler {
+	return &ArticleHandler{svc: svc}
 }
 
-// Handlers attach errors with c.Error and return; middleware.ErrorHandler renders them.
+// ArticleHandlers attach errors with c.Error and return; middleware.ErrorArticleHandler renders them.
 
-func (h *Handler) Create(c *gin.Context) {
-	var req CreateRequest
+func (h *ArticleHandler) Create(c *gin.Context) {
+	var req CreateArticleRequest
 	if err := httpx.BindJSON(c, &req); err != nil {
 		_ = c.Error(err)
 		return
@@ -27,10 +27,10 @@ func (h *Handler) Create(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	httpx.Created(c, ToResponse(a))
+	httpx.Created(c, a)
 }
 
-func (h *Handler) Get(c *gin.Context) {
+func (h *ArticleHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 	// if err != nil {
 	// 	_ = c.Error(err)
@@ -41,10 +41,10 @@ func (h *Handler) Get(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	httpx.OK(c, ToResponse(a))
+	httpx.OK(c, a)
 }
 
-func (h *Handler) List(c *gin.Context) {
+func (h *ArticleHandler) List(c *gin.Context) {
 	page, err := httpx.ParsePage(c)
 	if err != nil {
 		_ = c.Error(err)
@@ -55,17 +55,17 @@ func (h *Handler) List(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	httpx.List(c, ToResponses(items), page.Meta(total))
+	httpx.List(c, items, page.Meta(total))
 }
 
-func (h *Handler) Update(c *gin.Context) {
+func (h *ArticleHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	// id, err := httpx.ParamInt64(c, "id")
 	// if err != nil {
 	// 	_ = c.Error(err)
 	// 	return
 	// }
-	var req UpdateRequest
+	var req UpdateArticleRequest
 	if err := httpx.BindJSON(c, &req); err != nil {
 		_ = c.Error(err)
 		return
@@ -75,10 +75,10 @@ func (h *Handler) Update(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	httpx.OK(c, ToResponse(a))
+	httpx.OK(c, a)
 }
 
-func (h *Handler) Delete(c *gin.Context) {
+func (h *ArticleHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	// id, err := httpx.ParamInt64(c, "id")
 	// if err != nil {

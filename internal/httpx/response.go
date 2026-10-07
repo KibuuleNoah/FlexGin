@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"flexgin/internal/apperror" // replace "yourmodule" with the module path from go.mod
+	"flexgin/internal/apperror"
 )
 
 type Envelope struct {

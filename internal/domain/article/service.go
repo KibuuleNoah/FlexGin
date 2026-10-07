@@ -15,12 +15,12 @@ import (
 	"flexgin/internal/utils"
 )
 
-type Service struct {
+type ArticleService struct {
 	q store.Querier
 }
 
 // q is store.New(db) (db is *database.DB, which embeds *sql.DB).
-func NewService(q store.Querier) *Service { return &Service{q: q} }
+func NewArticleService(q store.Querier) *ArticleService { return &ArticleService{q: q} }
 
 var slugRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
@@ -33,7 +33,7 @@ func validateSlug(s string) error {
 	return nil
 }
 
-func (s *Service) Create(ctx context.Context, req CreateRequest) (store.Article, error) {
+func (s *ArticleService) Create(ctx context.Context, req CreateArticleRequest) (store.Article, error) {
 	slug := strings.TrimSpace(req.Slug)
 	if err := validateSlug(slug); err != nil {
 		return store.Article{}, err
@@ -44,12 +44,12 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (store.Article,
 	return a, mapErr(err, "create article")
 }
 
-func (s *Service) Get(ctx context.Context, id string) (store.Article, error) {
+func (s *ArticleService) Get(ctx context.Context, id string) (store.Article, error) {
 	a, err := s.q.GetArticle(ctx, id)
 	return a, mapErr(err, "get article")
 }
 
-func (s *Service) List(ctx context.Context, limit, offset int) ([]store.Article, int, error) {
+func (s *ArticleService) List(ctx context.Context, limit, offset int) ([]store.Article, int, error) {
 	rows, err := s.q.ListArticles(ctx, store.ListArticlesParams{PageLimit: int32(limit), PageOffset: int32(offset)})
 	if err != nil {
 		return nil, 0, mapErr(err, "list articles")
@@ -61,7 +61,7 @@ func (s *Service) List(ctx context.Context, limit, offset int) ([]store.Article,
 	return rows, int(total), nil
 }
 
-func (s *Service) Update(ctx context.Context, id string, req UpdateRequest) (store.Article, error) {
+func (s *ArticleService) Update(ctx context.Context, id string, req UpdateArticleRequest) (store.Article, error) {
 	if req.Title == nil && req.Slug == nil && req.Body == nil && req.Published == nil {
 		return store.Article{}, apperror.Validation("no fields to update", nil)
 	}
@@ -84,7 +84,7 @@ func (s *Service) Update(ctx context.Context, id string, req UpdateRequest) (sto
 	return a, mapErr(err, "update article")
 }
 
-func (s *Service) Delete(ctx context.Context, id string) error {
+func (s *ArticleService) Delete(ctx context.Context, id string) error {
 	n, err := s.q.DeleteArticle(ctx, id)
 	if err != nil {
 		return mapErr(err, "delete article")

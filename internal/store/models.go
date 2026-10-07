@@ -10,30 +10,30 @@ import (
 )
 
 type Article struct {
-	ID        string
-	Title     string
-	Slug      string
-	Body      string
-	AuthorID  string
-	Published bool
-	CreatedAt int64
-	UpdatedAt int64
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Slug      string `json:"slug"`
+	Body      string `json:"body"`
+	AuthorID  string `json:"author_id"`
+	Published bool   `json:"published"`
+	CreatedAt int64  `json:"created_at"`
+	UpdatedAt int64  `json:"updated_at"`
 }
 
 type CacheItem struct {
-	Key       string
-	Value     json.RawMessage
-	ExpiresAt sql.NullTime
+	Key       string          `json:"key"`
+	Value     json.RawMessage `json:"value"`
+	ExpiresAt sql.NullTime    `json:"expires_at"`
 }
 
 type User struct {
-	ID          string
-	Username    string
-	PhoneNo     string
-	AvatarUrl   *string
-	IsBanned    sql.NullBool
-	Verified    bool
-	CreatedAt   int64
-	UpdatedAt   int64
-	LastLoginAt sql.NullInt64
+	ID          string        `json:"id"`
+	Username    string        `json:"username"`
+	PhoneNo     string        `json:"phone_no"`
+	AvatarUrl   *string       `json:"avatar_url"`
+	IsBanned    sql.NullBool  `json:"is_banned"`
+	Verified    bool          `json:"verified"`
+	CreatedAt   int64         `json:"created_at"`
+	UpdatedAt   int64         `json:"updated_at"`
+	LastLoginAt sql.NullInt64 `json:"last_login_at"`
 }

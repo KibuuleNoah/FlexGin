@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"flexgin/internal/article"
+	"flexgin/internal/domain/article"
 	"flexgin/internal/httpx"
 	"flexgin/internal/middleware"
 	"flexgin/internal/store"

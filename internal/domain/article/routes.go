@@ -8,7 +8,7 @@ import (
 
 // RegisterRoutes mounts the article endpoints on the given group (e.g. /api/v1).
 func RegisterArticleRoutes(rg *gin.RouterGroup, q store.Querier) {
-	h := NewHandler(*NewService(q))
+	h := NewArticleHandler(*NewArticleService(q))
 	g := rg.Group("/articles")
 	g.POST("", h.Create)
 	g.GET("", h.List)
