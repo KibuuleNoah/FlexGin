@@ -7,10 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"FlexGin/internal/article"
-	"FlexGin/internal/httpx"
-	"FlexGin/internal/middleware"
-	"FlexGin/internal/store"
+	"flexgin/internal/article"
+	"flexgin/internal/httpx"
+	"flexgin/internal/middleware"
+	"flexgin/internal/store"
 )
 
 // RegisterRoutes builds the router: global middleware, probes, then every feature group.

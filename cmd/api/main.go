@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"FlexGin/internal/config"
-	"FlexGin/internal/database"
-	"FlexGin/internal/logger"
-	"FlexGin/internal/server"
+	"flexgin/internal/config"
+	"flexgin/internal/database"
+	"flexgin/internal/logger"
+	"flexgin/internal/server"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {

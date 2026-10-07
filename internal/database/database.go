@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"FlexGin/internal/config"
+	"flexgin/internal/config"
 )
 
 // DB wraps *sql.DB. Construct once in main and inject into repositories.

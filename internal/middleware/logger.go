@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"FlexGin/internal/httpx"
+	"flexgin/internal/httpx"
 )
 
 // RequestLogger logs one structured line per request after it completes.

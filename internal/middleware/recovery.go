@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"runtime/debug"
 
-	"FlexGin/internal/apperror"
-	"FlexGin/internal/httpx"
+	"flexgin/internal/apperror"
+	"flexgin/internal/httpx"
 
 	"github.com/gin-gonic/gin"
 )

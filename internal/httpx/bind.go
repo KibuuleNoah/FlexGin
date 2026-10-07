@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
-	"FlexGin/internal/apperror"
+	"flexgin/internal/apperror"
 )
 
 // UseJSONFieldNames makes validation errors report json tag names instead of Go field names.

@@ -1,7 +1,7 @@
 package article
 
 import (
-	"FlexGin/internal/store"
+	"flexgin/internal/store"
 
 	"github.com/gin-gonic/gin"
 )
