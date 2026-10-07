@@ -1,6 +1,6 @@
 package article
 
-import "flex/internal/apperror" // replace "yourmodule" with the module path from go.mod
+import "FlexGin/internal/apperror" // replace "yourmodule" with the module path from go.mod
 
 // Sentinels are shared, read-only. Compare with errors.Is.
 var (

@@ -3,7 +3,7 @@ package middleware
 import (
 	"time"
 
-	"flex/internal/config"
+	"FlexGin/internal/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

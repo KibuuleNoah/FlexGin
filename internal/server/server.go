@@ -7,10 +7,10 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"flex/internal/database"
-	"flex/internal/store"
+	"FlexGin/internal/database"
+	"FlexGin/internal/store"
 
-	"flex/internal/config"
+	"FlexGin/internal/config"
 )
 
 type Server struct {

@@ -14,8 +14,8 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"flex/internal/config"
-	"flex/internal/database"
+	"FlexGin/internal/config"
+	"FlexGin/internal/database"
 )
 
 var testCfg config.DB

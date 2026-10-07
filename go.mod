@@ -1,4 +1,4 @@
-module flex
+module FlexGin
 
 go 1.26.3
 

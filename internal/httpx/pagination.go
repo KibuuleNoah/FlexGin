@@ -3,7 +3,7 @@ package httpx
 import (
 	"strconv"
 
-	"flex/internal/apperror"
+	"FlexGin/internal/apperror"
 
 	"github.com/gin-gonic/gin"
 )

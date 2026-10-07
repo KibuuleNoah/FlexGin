@@ -9,10 +9,10 @@ import (
 	"regexp"
 	"strings"
 
-	"flex/internal/apperror"
-	"flex/internal/database"
-	"flex/internal/store"
-	"flex/internal/utils"
+	"FlexGin/internal/apperror"
+	"FlexGin/internal/database"
+	"FlexGin/internal/store"
+	"FlexGin/internal/utils"
 )
 
 type Service struct {

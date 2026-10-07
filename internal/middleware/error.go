@@ -3,8 +3,8 @@ package middleware
 import (
 	"log/slog"
 
-	"flex/internal/apperror"
-	"flex/internal/httpx"
+	"FlexGin/internal/apperror"
+	"FlexGin/internal/httpx"
 
 	"github.com/gin-gonic/gin"
 )

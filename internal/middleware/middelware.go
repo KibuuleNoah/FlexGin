@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"flex/internal/config"
+	"FlexGin/internal/config"
 )
 
 // Global returns the default stack in the order it must run:

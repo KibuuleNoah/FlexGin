@@ -1,7 +1,7 @@
 package article
 
 import (
-	"flex/internal/store"
+	"FlexGin/internal/store"
 )
 
 type CreateRequest struct {

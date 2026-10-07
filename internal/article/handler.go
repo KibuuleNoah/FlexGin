@@ -3,7 +3,7 @@ package article
 import (
 	"github.com/gin-gonic/gin"
 
-	"flex/internal/httpx"
+	"FlexGin/internal/httpx"
 )
 
 type Handler struct {
