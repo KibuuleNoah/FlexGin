@@ -1,4 +1,4 @@
-# flex
+# FlexGin
 
 A production ready Go API template: Gin, PostgreSQL, sqlc, goose. Built on `go-blueprint`, reorganised so adding a feature is a short, repeatable process. `article` is the reference feature, it shows how everything must be done.
 
