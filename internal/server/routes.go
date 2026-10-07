@@ -1,36 +1,64 @@
 package server
 
 import (
+	"context"
 	"net/http"
+	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"flex/internal/article"
+	"flex/internal/httpx"
+	"flex/internal/middleware"
+	"flex/internal/store"
 )
 
-func (s *Server) RegisterRoutes() http.Handler {
-	r := gin.Default()
+// RegisterRoutes builds the router: global middleware, probes, then every feature group.
+func (s *Server) RegisterRoutes(q *store.Queries) http.Handler {
+	if s.cfg.IsProd() {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	httpx.UseJSONFieldNames()
 
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // Add your frontend URL
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
-		AllowCredentials: true, // Enable cookies/auth
-	}))
+	r := gin.New()
+	r.Use(middleware.Global(s.cfg, s.log)...)
 
-	r.GET("/", s.HelloWorldHandler)
-
-	r.GET("/health", s.healthHandler)
+	s.registerProbeRoutes(r)
+	s.registerAPIRoutes(r, q)
 
 	return r
 }
 
-func (s *Server) HelloWorldHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
-	c.JSON(http.StatusOK, resp)
+func (s *Server) registerProbeRoutes(r *gin.Engine) {
+	r.GET("/healthz", s.liveness)
+	r.GET("/readyz", s.readiness)
 }
 
-func (s *Server) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
+// registerAPIRoutes is the single place feature routes are mounted.
+// Adding a feature = one line here.
+func (s *Server) registerAPIRoutes(r *gin.Engine, q *store.Queries) {
+	v1 := r.Group("/api/v1")
+
+	article.RegisterArticleRoutes(v1, q)
+	// user.RegisterRoutes(v1, s.users)
+	// item.RegisterRoutes(v1, s.items)
+	// cart.RegisterRoutes(v1, s.carts)
+}
+
+// liveness: process is up. No dependency checks.
+func (s *Server) liveness(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// readiness: dependencies are reachable. Used by orchestrators to gate traffic.
+func (s *Server) readiness(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+	defer cancel()
+
+	if err := s.db.Health(ctx); err != nil {
+		s.log.ErrorContext(ctx, "readiness check failed", "error", err)
+		c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unavailable"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ready"})
 }

@@ -1,18 +1,28 @@
-# Simple Makefile for a Go project
+-include .env
+export
 
-# Build the application
+APP_NAME   := main
+DB_SSLMODE ?= disable
+DB_URL     ?= postgres://$(BLUEPRINT_DB_USERNAME):$(BLUEPRINT_DB_PASSWORD)@$(BLUEPRINT_DB_HOST):$(BLUEPRINT_DB_PORT)/$(BLUEPRINT_DB_DATABASE)?sslmode=$(DB_SSLMODE)&search_path=$(BLUEPRINT_DB_SCHEMA)
+
+# go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+SQLC  = sqlc
+# go install github.com/pressly/goose/v3/cmd/goose@latest
+GOOSE = GOOSE_DRIVER=postgres GOOSE_DBSTRING="$(DB_URL)" GOOSE_MIGRATION_DIR=migrations goose
+#
+LINT  = go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+
+# Build and test
 all: build test
 
 build:
 	@echo "Building..."
-	
-	
-	@go build -o main cmd/api/main.go
+	@CGO_ENABLED=0 go build -ldflags="-s -w" -o $(APP_NAME) cmd/api/main.go
 
-# Run the application
 run:
 	@go run cmd/api/main.go
-# Create DB container
+
+# Docker
 docker-run:
 	@if docker compose up --build 2>/dev/null; then \
 		: ; \
@@ -21,7 +31,6 @@ docker-run:
 		docker-compose up --build; \
 	fi
 
-# Shutdown DB container
 docker-down:
 	@if docker compose down 2>/dev/null; then \
 		: ; \
@@ -30,21 +39,55 @@ docker-down:
 		docker-compose down; \
 	fi
 
-# Test the application
+docker-build:
+	@docker build -t $(APP_NAME):latest .
+
+# Tests
 test:
 	@echo "Testing..."
 	@go test ./... -v
-# Integrations Tests for the application
+
+# Integration tests (testcontainers: database + repositories)
 itest:
 	@echo "Running integration tests..."
-	@go test ./internal/database -v
+	@go test ./internal/database ./internal/article/... -v
 
-# Clean the binary
+lint:
+	@$(LINT) run ./...
+
+# sqlc
+sqlc:
+	@$(SQLC) generate
+
+sqlc-check:
+	@$(SQLC) diff
+
+sqlc-vet:
+	@$(SQLC) vet
+
+# Migrations (goose)
+migrate-up:
+	@$(GOOSE) up
+
+migrate-down:
+	@$(GOOSE) down
+
+migrate-status:
+	@$(GOOSE) status
+
+migrate-reset:
+	@$(GOOSE) reset
+
+# usage: make migrate-create name=add_users
+migrate-create:
+	@$(GOOSE) create $(name) sql -s
+
+# Clean
 clean:
 	@echo "Cleaning..."
-	@rm -f main
+	@rm -f $(APP_NAME)
 
-# Live Reload
+# Live reload
 watch:
 	@if command -v air > /dev/null; then \
             air; \
@@ -61,4 +104,7 @@ watch:
             fi; \
         fi
 
-.PHONY: all build run test clean watch docker-run docker-down itest
+.PHONY: all build run docker-run docker-down docker-build test itest lint \
+	sqlc sqlc-check sqlc-vet \
+	migrate-up migrate-down migrate-status migrate-reset migrate-create \
+	clean watch

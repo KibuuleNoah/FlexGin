@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"flex/internal/config"
+	"flex/internal/database"
+	"flex/internal/logger"
 	"flex/internal/server"
 )
 
@@ -38,8 +42,20 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		panic(fmt.Sprintf("ENV vars error: %s", err))
+	}
 
-	server := server.NewServer()
+	log := logger.New(cfg.Env, cfg.LogLevel)
+	slog.SetDefault(log)
+
+	db, err := database.New(cfg.DB)
+	if err != nil {
+		panic(fmt.Sprintf("Database error: %s", err))
+	}
+
+	server := server.NewServer(cfg, log, db)
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
@@ -47,12 +63,12 @@ func main() {
 	// Run graceful shutdown in a separate goroutine
 	go gracefulShutdown(server, done)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(fmt.Sprintf("http server error: %s", err))
 	}
 
 	// Wait for the graceful shutdown to complete
 	<-done
-	log.Println("Graceful shutdown complete.")
+	fmt.Println("Graceful shutdown complete.")
 }

@@ -1,0 +1,16 @@
+version: "2"
+sql:
+  - engine: postgresql
+    schema: migrations
+    queries: internal/store/queries
+    gen:
+      go:
+        package: store
+        out: internal/store
+        sql_package: database/sql
+        emit_interface: true
+        emit_empty_slices: true
+        emit_json_tags: false
+        overrides:
+          - { db_type: "text", nullable: true, go_type: { type: "string", pointer: true } }
+          - { db_type: "bool", nullable: true, go_type: { type: "bool", pointer: true } }

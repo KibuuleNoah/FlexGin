@@ -1,100 +1,127 @@
-package database
+package database_test
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
+	"os"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	"flex/internal/config"
+	"flex/internal/database"
 )
 
-func mustStartPostgresContainer() (func(context.Context, ...testcontainers.TerminateOption) error, error) {
-	var (
-		dbName = "database"
-		dbPwd  = "password"
-		dbUser = "user"
-	)
+var testCfg config.DB
 
-	dbContainer, err := postgres.Run(
-		context.Background(),
-		"postgres:latest",
-		postgres.WithDatabase(dbName),
-		postgres.WithUsername(dbUser),
-		postgres.WithPassword(dbPwd),
+func TestMain(m *testing.M) {
+	ctx := context.Background()
+
+	container, err := postgres.Run(
+		ctx, "postgres:16-alpine",
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("user"),
+		postgres.WithPassword("password"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
+				WithStartupTimeout(30*time.Second),
+		),
 	)
 	if err != nil {
-		return nil, err
+		log.Fatalf("start postgres container: %v", err)
 	}
 
-	database = dbName
-	password = dbPwd
-	username = dbUser
-
-	dbHost, err := dbContainer.Host(context.Background())
+	host, err := container.Host(ctx)
 	if err != nil {
-		return dbContainer.Terminate, err
+		log.Fatalf("container host: %v", err)
 	}
-
-	dbPort, err := dbContainer.MappedPort(context.Background(), "5432/tcp")
+	mapped, err := container.MappedPort(ctx, "5432/tcp")
 	if err != nil {
-		return dbContainer.Terminate, err
+		log.Fatalf("container port: %v", err)
+	}
+	port, _ := strconv.Atoi(mapped.Port())
+
+	testCfg = config.DB{
+		Host: host, Port: port, Name: "testdb",
+		User: "user", Password: "password",
+		Schema: "public", SSLMode: "disable",
+		MaxOpenConns: 5, MaxIdleConns: 5,
+		ConnMaxLifetime: time.Minute, ConnMaxIdleTime: time.Minute,
 	}
 
-	host = dbHost
-	port = dbPort.Port()
+	code := m.Run()
 
-	return dbContainer.Terminate, err
-}
-
-func TestMain(m *testing.M) {
-	teardown, err := mustStartPostgresContainer()
-	if err != nil {
-		log.Fatalf("could not start postgres container: %v", err)
+	if err := container.Terminate(ctx); err != nil {
+		log.Printf("terminate container: %v", err)
 	}
-
-	m.Run()
-
-	if teardown != nil && teardown(context.Background()) != nil {
-		log.Fatalf("could not teardown postgres container: %v", err)
-	}
+	os.Exit(code)
 }
 
 func TestNew(t *testing.T) {
-	srv := New()
-	if srv == nil {
-		t.Fatal("New() returned nil")
+	db, err := database.New(testCfg)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Health(context.Background()); err != nil {
+		t.Fatalf("Health: %v", err)
 	}
 }
 
-func TestHealth(t *testing.T) {
-	srv := New()
+func TestWithTx(t *testing.T) {
+	db, err := database.New(testCfg)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	defer db.Close()
+	ctx := context.Background()
 
-	stats := srv.Health()
-
-	if stats["status"] != "up" {
-		t.Fatalf("expected status to be up, got %s", stats["status"])
+	if _, err := db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS tx_probe (id INT PRIMARY KEY)`); err != nil {
+		t.Fatal(err)
 	}
 
-	if _, ok := stats["error"]; ok {
-		t.Fatalf("expected error not to be present")
+	sentinel := errors.New("boom")
+	err = db.WithTx(ctx, func(tx *sql.Tx) error {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO tx_probe (id) VALUES (1)`); err != nil {
+			return err
+		}
+		return sentinel
+	})
+	if !errors.Is(err, sentinel) {
+		t.Fatalf("want sentinel error, got %v", err)
 	}
 
-	if stats["message"] != "It's healthy" {
-		t.Fatalf("expected message to be 'It's healthy', got %s", stats["message"])
+	var n int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM tx_probe`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("rollback failed: %d rows", n)
 	}
 }
 
-func TestClose(t *testing.T) {
-	srv := New()
+func TestIsUniqueViolation(t *testing.T) {
+	db, err := database.New(testCfg)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	defer db.Close()
+	ctx := context.Background()
 
-	if srv.Close() != nil {
-		t.Fatalf("expected Close() to return nil")
+	if _, err := db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS uniq_probe (v TEXT UNIQUE)`); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = db.ExecContext(ctx, `INSERT INTO uniq_probe (v) VALUES ('a')`)
+	_, err = db.ExecContext(ctx, `INSERT INTO uniq_probe (v) VALUES ('a')`)
+	if !database.IsUniqueViolation(err) {
+		t.Fatalf("want unique violation, got %v", err)
 	}
 }

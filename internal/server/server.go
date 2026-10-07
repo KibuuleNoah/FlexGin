@@ -2,38 +2,48 @@ package server
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
-	"os"
-	"strconv"
-	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 
 	"flex/internal/database"
+	"flex/internal/store"
+
+	"flex/internal/config"
 )
 
 type Server struct {
-	port int
-
-	db database.Service
+	cfg config.Config
+	log *slog.Logger
+	db  *database.DB
 }
 
-func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
+func NewServer(cfg config.Config, log *slog.Logger, db *database.DB) *http.Server {
+	q := store.New(db)
 
-		db: database.New(),
+	s := &Server{
+		cfg: cfg,
+		log: log,
+		db:  db,
 	}
 
-	// Declare Server config
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
-		Handler:      NewServer.RegisterRoutes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	return &http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.HTTP.Port),
+		Handler:           s.RegisterRoutes(q),
+		ReadTimeout:       cfg.HTTP.ReadTimeout,
+		ReadHeaderTimeout: cfg.HTTP.ReadHeaderTO,
+		WriteTimeout:      cfg.HTTP.WriteTimeout,
+		IdleTimeout:       cfg.HTTP.IdleTimeout,
+		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelError),
 	}
-
-	return server
 }
+
+// Shutdown drains the HTTP server, then closes the DB pool.
+// func Shutdown(ctx context.Context, srv *http.Server, db *database.DB) error {
+// 	err := srv.Shutdown(ctx)
+// 	if cerr := db.Close(); cerr != nil {
+// 		err = errors.Join(err, cerr)
+// 	}
+// 	return err
+// }

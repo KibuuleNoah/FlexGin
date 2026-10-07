@@ -1,0 +1,146 @@
+package article
+
+import (
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+
+	"flex/internal/httpx"
+	"flex/internal/middleware"
+	"flex/internal/store"
+)
+
+// Handlers are tested through the real Service backed by fakeQ (defined in service_test.go).
+func newTestRouter(q store.Querier) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	httpx.UseJSONFieldNames()
+
+	r := gin.New()
+	r.Use(middleware.RequestID(), middleware.ErrorHandler(slog.Default()))
+	RegisterRoutes(r.Group("/api/v1"), NewHandler(NewService(q)))
+	return r
+}
+
+func do(r http.Handler, method, path, body string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func decode(t *testing.T, w *httptest.ResponseRecorder) httpx.Envelope {
+	t.Helper()
+	var env httpx.Envelope
+	if err := json.Unmarshal(w.Body.Bytes(), &env); err != nil {
+		t.Fatalf("decode: %v, body = %s", err, w.Body)
+	}
+	return env
+}
+
+func TestHandler_Create_Validation(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	w := do(r, http.MethodPost, "/api/v1/articles", `{"title":"x"}`)
+
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body)
+	}
+	env := decode(t, w)
+	if env.Error == nil || env.Error.Fields["title"] == "" || env.Error.Fields["slug"] == "" {
+		t.Fatalf("missing field errors: %+v", env.Error)
+	}
+}
+
+func TestHandler_Create_OK(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	w := do(r, http.MethodPost, "/api/v1/articles", `{"title":"Hello","slug":"hello","body":"x"}`)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body)
+	}
+}
+
+func TestHandler_Create_DuplicateSlug(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	body := `{"title":"Hello","slug":"hello","body":"x"}`
+	do(r, http.MethodPost, "/api/v1/articles", body)
+	w := do(r, http.MethodPost, "/api/v1/articles", body)
+
+	if w.Code != http.StatusConflict {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body)
+	}
+	if env := decode(t, w); env.Error == nil || env.Error.Code != "article_slug_taken" {
+		t.Fatalf("unexpected error body: %+v", env.Error)
+	}
+}
+
+func TestHandler_Get_NotFound(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	w := do(r, http.MethodGet, "/api/v1/articles/42", "")
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("status = %d", w.Code)
+	}
+	if env := decode(t, w); env.Error == nil || env.Error.Code != "article_not_found" {
+		t.Fatalf("unexpected error body: %+v", env.Error)
+	}
+}
+
+func TestHandler_Get_BadID(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	w := do(r, http.MethodGet, "/api/v1/articles/abc", "")
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d", w.Code)
+	}
+}
+
+func TestHandler_List(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	do(r, http.MethodPost, "/api/v1/articles", `{"title":"Hello","slug":"hello","body":"x"}`)
+
+	w := do(r, http.MethodGet, "/api/v1/articles?page=1&per_page=10", "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d", w.Code)
+	}
+	env := decode(t, w)
+	if env.Meta == nil || env.Meta.Total != 1 || env.Meta.PerPage != 10 {
+		t.Fatalf("bad meta: %+v", env.Meta)
+	}
+}
+
+func TestHandler_List_BadPagination(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	w := do(r, http.MethodGet, "/api/v1/articles?per_page=1000", "")
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d", w.Code)
+	}
+}
+
+func TestHandler_Update_And_Delete(t *testing.T) {
+	r := newTestRouter(newFakeQ())
+	do(r, http.MethodPost, "/api/v1/articles", `{"title":"Hello","slug":"hello","body":"x"}`)
+
+	w := do(r, http.MethodPatch, "/api/v1/articles/1", `{"title":"Changed"}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("patch status = %d, body = %s", w.Code, w.Body)
+	}
+
+	w = do(r, http.MethodPatch, "/api/v1/articles/1", `{}`)
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("empty patch status = %d", w.Code)
+	}
+
+	w = do(r, http.MethodDelete, "/api/v1/articles/1", "")
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("delete status = %d", w.Code)
+	}
+
+	w = do(r, http.MethodDelete, "/api/v1/articles/1", "")
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("second delete status = %d", w.Code)
+	}
+}
