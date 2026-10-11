@@ -10,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"flex/internal/httpx"
-	"flex/internal/middleware"
-	"flex/internal/store"
+	"flexgin/internal/httpx"
+	"flexgin/internal/middleware"
+	"flexgin/internal/store"
 )
 
 // Handlers are tested through the real Service backed by fakeQ (defined in service_test.go).
@@ -22,7 +22,7 @@ func newTestRouter(q store.Querier) *gin.Engine {
 
 	r := gin.New()
 	r.Use(middleware.RequestID(), middleware.ErrorHandler(slog.Default()))
-	RegisterRoutes(r.Group("/api/v1"), NewHandler(NewService(q)))
+	RegisterArticleRoutes(r.Group("/api/v1"), q)
 	return r
 }
 

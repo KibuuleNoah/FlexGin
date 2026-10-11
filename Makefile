@@ -3,7 +3,7 @@ export
 
 APP_NAME   := main
 DB_SSLMODE ?= disable
-DB_URL     ?= postgres://$(BLUEPRINT_DB_USERNAME):$(BLUEPRINT_DB_PASSWORD)@$(BLUEPRINT_DB_HOST):$(BLUEPRINT_DB_PORT)/$(BLUEPRINT_DB_DATABASE)?sslmode=$(DB_SSLMODE)&search_path=$(BLUEPRINT_DB_SCHEMA)
+DB_URL     ?= postgres://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?sslmode=$(DB_SSLMODE)&search_path=$(DB_SCHEMA)
 
 # go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 SQLC  = sqlc

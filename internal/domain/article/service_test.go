@@ -4,25 +4,25 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"testing"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"flex/internal/apperror"
-	"flex/internal/store"
+	"flexgin/internal/apperror"
+	"flexgin/internal/store"
 )
 
 // fakeQ is an in-memory store.Querier. Embedding the interface means any
 // method not overridden panics, so tests fail loudly if the service calls something unexpected.
 type fakeQ struct {
 	store.Querier
-	items  map[int64]store.Article
+	items  map[string]store.Article
 	nextID int64
 }
 
 func newFakeQ() *fakeQ {
-	return &fakeQ{items: map[int64]store.Article{}, nextID: 1}
+	return &fakeQ{items: map[string]store.Article{}, nextID: 1}
 }
 
 func (f *fakeQ) CreateArticle(_ context.Context, p store.CreateArticleParams) (store.Article, error) {
@@ -31,17 +31,16 @@ func (f *fakeQ) CreateArticle(_ context.Context, p store.CreateArticleParams) (s
 			return store.Article{}, &pgconn.PgError{Code: "23505"}
 		}
 	}
-	now := time.Now()
 	a := store.Article{
-		ID: f.nextID, Title: p.Title, Slug: p.Slug, Body: p.Body,
-		Published: p.Published, CreatedAt: now, UpdatedAt: now,
+		ID: fmt.Sprintf("abcde%d", f.nextID), Title: p.Title, Slug: p.Slug, Body: p.Body,
+		Published: p.Published,
 	}
 	f.items[a.ID] = a
 	f.nextID++
 	return a, nil
 }
 
-func (f *fakeQ) GetArticle(_ context.Context, id int64) (store.Article, error) {
+func (f *fakeQ) GetArticle(_ context.Context, id string) (store.Article, error) {
 	a, ok := f.items[id]
 	if !ok {
 		return store.Article{}, sql.ErrNoRows
@@ -66,24 +65,28 @@ func (f *fakeQ) UpdateArticle(_ context.Context, p store.UpdateArticleParams) (s
 	if !ok {
 		return store.Article{}, sql.ErrNoRows
 	}
-	if p.Title != nil {
-		a.Title = *p.Title
+
+	if p.Title.Valid {
+		a.Title = p.Title.String
 	}
-	if p.Slug != nil {
-		a.Slug = *p.Slug
+
+	if p.Slug.Valid {
+		a.Slug = p.Slug.String
 	}
+
 	if p.Body != nil {
 		a.Body = *p.Body
 	}
-	if p.Published != nil {
-		a.Published = *p.Published
+
+	if p.Published.Valid {
+		a.Published = p.Published.Bool
 	}
-	a.UpdatedAt = time.Now()
+
 	f.items[p.ID] = a
 	return a, nil
 }
 
-func (f *fakeQ) DeleteArticle(_ context.Context, id int64) (int64, error) {
+func (f *fakeQ) DeleteArticle(_ context.Context, id string) (int64, error) {
 	if _, ok := f.items[id]; !ok {
 		return 0, nil
 	}
@@ -94,18 +97,18 @@ func (f *fakeQ) DeleteArticle(_ context.Context, id int64) (int64, error) {
 func TestService_Create(t *testing.T) {
 	tests := []struct {
 		name           string
-		req            CreateRequest
+		req            CreateArticleRequest
 		seed           bool
 		wantErr        error
 		wantValidation bool
 	}{
-		{name: "ok", req: CreateRequest{Title: "Hello", Slug: "hello-world", Body: "x"}},
-		{name: "bad slug", req: CreateRequest{Title: "Hello", Slug: "Hello World", Body: "x"}, wantValidation: true},
-		{name: "duplicate slug", req: CreateRequest{Title: "Hello", Slug: "hello-world", Body: "x"}, seed: true, wantErr: ErrSlugTaken},
+		{name: "ok", req: CreateArticleRequest{Title: "Hello", Slug: "hello-world", Body: "x"}},
+		{name: "bad slug", req: CreateArticleRequest{Title: "Hello", Slug: "Hello World", Body: "x"}, wantValidation: true},
+		{name: "duplicate slug", req: CreateArticleRequest{Title: "Hello", Slug: "hello-world", Body: "x"}, seed: true, wantErr: ErrSlugTaken},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := NewService(newFakeQ())
+			svc := NewArticleService(newFakeQ())
 			if tt.seed {
 				if _, err := svc.Create(context.Background(), tt.req); err != nil {
 					t.Fatal(err)
@@ -130,32 +133,32 @@ func TestService_Create(t *testing.T) {
 }
 
 func TestService_Get(t *testing.T) {
-	svc := NewService(newFakeQ())
-	if _, err := svc.Get(context.Background(), 1); !errors.Is(err, ErrNotFound) {
+	svc := NewArticleService(newFakeQ())
+	if _, err := svc.Get(context.Background(), "abcde1"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("want ErrNotFound, got %v", err)
 	}
 }
 
 func TestService_Update(t *testing.T) {
-	svc := NewService(newFakeQ())
+	svc := NewArticleService(newFakeQ())
 	ctx := context.Background()
 
-	a, err := svc.Create(ctx, CreateRequest{Title: "Hello", Slug: "hello", Body: "x"})
+	a, err := svc.Create(ctx, CreateArticleRequest{Title: "Hello", Slug: "hello", Body: "x"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := svc.Update(ctx, a.ID, UpdateRequest{}); err == nil {
+	if _, err := svc.Update(ctx, a.ID, UpdateArticleRequest{}); err == nil {
 		t.Fatal("empty update must fail")
 	}
 
 	bad := "Bad Slug"
-	if _, err := svc.Update(ctx, a.ID, UpdateRequest{Slug: &bad}); err == nil {
+	if _, err := svc.Update(ctx, a.ID, UpdateArticleRequest{Slug: &bad}); err == nil {
 		t.Fatal("invalid slug must fail")
 	}
 
 	title := "Changed"
-	got, err := svc.Update(ctx, a.ID, UpdateRequest{Title: &title})
+	got, err := svc.Update(ctx, a.ID, UpdateArticleRequest{Title: &title})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,16 +166,16 @@ func TestService_Update(t *testing.T) {
 		t.Fatalf("partial update wrong: %+v", got)
 	}
 
-	if _, err := svc.Update(ctx, 999, UpdateRequest{Title: &title}); !errors.Is(err, ErrNotFound) {
+	if _, err := svc.Update(ctx, "abcde999", UpdateArticleRequest{Title: &title}); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("want ErrNotFound, got %v", err)
 	}
 }
 
 func TestService_List(t *testing.T) {
-	svc := NewService(newFakeQ())
+	svc := NewArticleService(newFakeQ())
 	ctx := context.Background()
 	for _, slug := range []string{"one", "two"} {
-		if _, err := svc.Create(ctx, CreateRequest{Title: "Title", Slug: slug, Body: "x"}); err != nil {
+		if _, err := svc.Create(ctx, CreateArticleRequest{Title: "Title", Slug: slug, Body: "x"}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -186,8 +189,8 @@ func TestService_List(t *testing.T) {
 }
 
 func TestService_Delete(t *testing.T) {
-	svc := NewService(newFakeQ())
-	if err := svc.Delete(context.Background(), 1); !errors.Is(err, ErrNotFound) {
+	svc := NewArticleService(newFakeQ())
+	if err := svc.Delete(context.Background(), "abcde1"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("want ErrNotFound, got %v", err)
 	}
 }
