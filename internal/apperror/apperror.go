@@ -14,6 +14,7 @@ const (
 	KindValidation
 	KindUnauthorized
 	KindForbidden
+	KindTooManyRequests
 )
 
 func (k Kind) HTTPStatus() int {
@@ -28,6 +29,9 @@ func (k Kind) HTTPStatus() int {
 		return http.StatusUnauthorized
 	case KindForbidden:
 		return http.StatusForbidden
+	case KindTooManyRequests:
+		return http.StatusTooManyRequests
+
 	default:
 		return http.StatusInternalServerError
 	}
@@ -70,6 +74,10 @@ func Unauthorized(msg string) *Error {
 
 func Forbidden(msg string) *Error {
 	return &Error{Kind: KindForbidden, Code: "forbidden", Message: msg}
+}
+
+func TooManyRequests(code, msg string) *Error {
+	return &Error{Kind: KindTooManyRequests, Code: code, Message: msg}
 }
 
 // Internal wraps an unexpected error. The cause is logged but never exposed.

@@ -1,16 +1,23 @@
+-- ===== migrations/00002_create_users.sql (fixed) =====
 -- +goose Up
 -- +goose StatementBegin
 CREATE SEQUENCE IF NOT EXISTS users_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY DEFAULT generate_short_id('users_id_seq'),
-    username VARCHAR(255) NOT NULL,
-    phone_no VARCHAR(16) NOT NULL UNIQUE,
-    avatar_url TEXT,
-    is_banned BOOLEAN DEFAULT FALSE,
-    verified BOOLEAN NOT NULL DEFAULT false,
-    created_at BIGINT NOT NULL,
-    updated_at BIGINT NOT NULL,
-    last_login_at BIGINT
+    id            TEXT PRIMARY KEY DEFAULT generate_short_id('users_id_seq'),
+    username      VARCHAR(255) NOT NULL,
+    password_hash TEXT,
+    email         TEXT,
+    role          TEXT         NOT NULL DEFAULT 'guest',
+    phone_no      VARCHAR(16)  NOT NULL UNIQUE,
+    avatar_url    TEXT,
+    is_banned     BOOLEAN      NOT NULL DEFAULT FALSE,
+    verified      BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at    BIGINT       NOT NULL,
+    updated_at    BIGINT       NOT NULL,
+    last_login_at BIGINT,
+    CONSTRAINT users_email_key UNIQUE (email),
+    CONSTRAINT users_role_check CHECK (role IN ('guest', 'user', 'admin'))
 );
 
 CREATE TRIGGER create_user_created_at
@@ -24,7 +31,6 @@ CREATE TRIGGER update_user_updated_at
 
 -- +goose Down
 -- +goose StatementBegin
-DROP SEQUENCE IF EXISTS users_id_seq;
-DROP TYPE IF EXISTS user_role;
 DROP TABLE IF EXISTS users;
+DROP SEQUENCE IF EXISTS users_id_seq;
 -- +goose StatementEnd

@@ -17,6 +17,8 @@ type Config struct {
 	LogLevel string
 	HTTP     HTTP
 	DB       DB
+	JWT      JWT
+	OTP      OTP
 	CORS     CORS
 }
 
@@ -42,6 +44,19 @@ type DB struct {
 	MaxIdleConns    int
 	ConnMaxLifetime time.Duration
 	ConnMaxIdleTime time.Duration
+}
+
+type JWT struct {
+	Secret     string
+	Issuer     string
+	AccessTTL  time.Duration
+	RefreshTTL time.Duration
+}
+
+type OTP struct {
+	TTL         time.Duration
+	Cooldown    time.Duration
+	MaxAttempts int
 }
 
 type CORS struct {
@@ -97,6 +112,18 @@ func Load() (Config, error) {
 			ConnMaxLifetime: l.duration("DB_CONN_MAX_LIFETIME", 30*time.Minute),
 			ConnMaxIdleTime: l.duration("DB_CONN_MAX_IDLE_TIME", 5*time.Minute),
 		},
+		JWT: JWT{
+			Secret:     l.required("JWT_SECRET"),
+			Issuer:     l.str("JWT_ISSUER", "flex"),
+			AccessTTL:  l.duration("JWT_ACCESS_TTL", 15*time.Minute),
+			RefreshTTL: l.duration("JWT_REFRESH_TTL", 7*24*time.Hour),
+		},
+		OTP: OTP{
+			TTL:         l.duration("OTP_TTL", 5*time.Minute),
+			Cooldown:    l.duration("OTP_COOLDOWN", 30*time.Second),
+			MaxAttempts: l.integer("OTP_MAX_ATTEMPTS", 5),
+		},
+
 		CORS: CORS{
 			AllowedOrigins:   l.list("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
 			AllowCredentials: l.boolean("CORS_ALLOW_CREDENTIALS", true),

@@ -14,3 +14,5 @@ sql:
         overrides:
           - { db_type: "text", nullable: true, go_type: { type: "string", pointer: true } }
           - { db_type: "bool", nullable: true, go_type: { type: "bool", pointer: true } }
+          - { db_type: "pg_catalog.varchar", nullable: true, go_type: { type: "string", pointer: true } }
+          - { db_type: "bigint", nullable: true, go_type: { type: "int64", pointer: true } }
