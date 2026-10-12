@@ -1,10 +1,3 @@
-// ===== internal/auth/fake_test.go =====
-// External test package: handler tests import middleware, which imports auth.
-// An in-package test would create an import cycle.
-//
-// Assumes the string-ID / phone shape from the last migration notes:
-// RequestOTPRequest{Identifier}, VerifyOTPRequest{UserID string, OTP}, Challenge.UserID string.
-// If you renamed Identifier to PhoneNo, update the 3 places that use it.
 package auth_test
 
 import (
@@ -13,8 +6,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
 
 	"flexgin/internal/config"
 	"flexgin/internal/domain/auth"
@@ -32,21 +23,21 @@ type fakeQ struct {
 	store.Querier
 	users      map[string]store.User
 	challenges []store.OtpChallenge
-	sessions   map[uuid.UUID]store.Session
+	sessions   map[string]store.Session
 }
 
 func newFakeQ() *fakeQ {
-	return &fakeQ{users: map[string]store.User{}, sessions: map[uuid.UUID]store.Session{}}
+	return &fakeQ{users: map[string]store.User{}, sessions: map[string]store.Session{}}
 }
 
-func (f *fakeQ) UpsertUserByPhone(_ context.Context, p store.UpsertUserByPhoneParams) (store.User, error) {
+func (f *fakeQ) UpsertUser(_ context.Context, identifier string) (store.User, error) {
 	for _, u := range f.users {
-		if u.PhoneNo == p.PhoneNo {
+		if u.Identifier == identifier {
 			return u, nil
 		}
 	}
 	u := store.User{
-		ID: fmt.Sprintf("u%d", len(f.users)+1), Username: p.Username, PhoneNo: p.PhoneNo,
+		ID: fmt.Sprintf("abcde%d", len(f.users)+1), Identifier: identifier,
 		Role: "guest", CreatedAt: time.Now().Unix(),
 	}
 	f.users[u.ID] = u
@@ -79,7 +70,7 @@ func (f *fakeQ) TouchUserLastLogin(context.Context, string) error { return nil }
 func (f *fakeQ) CreateOTPChallenge(_ context.Context, p store.CreateOTPChallengeParams) (store.OtpChallenge, error) {
 	c := store.OtpChallenge{
 		ID: p.ID, UserID: p.UserID, CodeHash: p.CodeHash,
-		ExpiresAt: p.ExpiresAt, CreatedAt: time.Now(),
+		ExpiresAt: p.ExpiresAt, CreatedAt: time.Now().Unix(),
 	}
 	f.challenges = append(f.challenges, c)
 	return c, nil
@@ -104,7 +95,7 @@ func (f *fakeQ) GetActiveOTPChallenge(_ context.Context, userID string) (store.O
 	return store.OtpChallenge{}, sql.ErrNoRows
 }
 
-func (f *fakeQ) GetOTPChallenge(_ context.Context, id uuid.UUID) (store.OtpChallenge, error) {
+func (f *fakeQ) GetOTPChallenge(_ context.Context, id string) (store.OtpChallenge, error) {
 	for _, c := range f.challenges {
 		if c.ID == id && !c.ConsumedAt.Valid && c.ExpiresAt.After(time.Now()) {
 			return c, nil
@@ -113,7 +104,7 @@ func (f *fakeQ) GetOTPChallenge(_ context.Context, id uuid.UUID) (store.OtpChall
 	return store.OtpChallenge{}, sql.ErrNoRows
 }
 
-func (f *fakeQ) IncrementOTPAttempts(_ context.Context, id uuid.UUID) error {
+func (f *fakeQ) IncrementOTPAttempts(_ context.Context, id string) error {
 	for i := range f.challenges {
 		if f.challenges[i].ID == id {
 			f.challenges[i].Attempts++
@@ -122,7 +113,7 @@ func (f *fakeQ) IncrementOTPAttempts(_ context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (f *fakeQ) ConsumeOTPChallenge(_ context.Context, id uuid.UUID) (int64, error) {
+func (f *fakeQ) ConsumeOTPChallenge(_ context.Context, id string) (int64, error) {
 	for i := range f.challenges {
 		c := &f.challenges[i]
 		if c.ID == id && !c.ConsumedAt.Valid && c.ExpiresAt.After(time.Now()) {
@@ -134,12 +125,12 @@ func (f *fakeQ) ConsumeOTPChallenge(_ context.Context, id uuid.UUID) (int64, err
 }
 
 func (f *fakeQ) CreateSession(_ context.Context, p store.CreateSessionParams) (store.Session, error) {
-	s := store.Session{ID: p.ID, UserID: p.UserID, RefreshHash: p.RefreshHash, ExpiresAt: p.ExpiresAt, CreatedAt: time.Now()}
+	s := store.Session{ID: p.ID, UserID: p.UserID, RefreshHash: p.RefreshHash, ExpiresAt: p.ExpiresAt, CreatedAt: time.Now().Unix()}
 	f.sessions[s.ID] = s
 	return s, nil
 }
 
-func (f *fakeQ) SessionIsActive(_ context.Context, id uuid.UUID) (bool, error) {
+func (f *fakeQ) SessionIsActive(_ context.Context, id string) (bool, error) {
 	s, ok := f.sessions[id]
 	return ok && !s.RevokedAt.Valid && s.ExpiresAt.After(time.Now()), nil
 }
@@ -155,7 +146,7 @@ func (f *fakeQ) ClaimRefreshSession(_ context.Context, hash string) (store.Sessi
 	return store.Session{}, sql.ErrNoRows
 }
 
-func (f *fakeQ) RevokeSession(_ context.Context, id uuid.UUID) (int64, error) {
+func (f *fakeQ) RevokeSession(_ context.Context, id string) (int64, error) {
 	s, ok := f.sessions[id]
 	if !ok || s.RevokedAt.Valid {
 		return 0, nil
@@ -191,9 +182,9 @@ func defaultOTP() config.OTP {
 	return config.OTP{TTL: 5 * time.Minute, Cooldown: 0, MaxAttempts: 3}
 }
 
-func newService(otp config.OTP) (*auth.Service, *fakeQ, *captureSender) {
+func newService(otp config.OTP) (*auth.AuthService, *fakeQ, *captureSender) {
 	q, sender := newFakeQ(), &captureSender{}
-	return auth.NewService(q, auth.NewTokenManager(jwtCfg()), sender, otp), q, sender
+	return auth.NewAuthService(q, auth.NewTokenManager(jwtCfg()), sender, otp), q, sender
 }
 
 func wrongCode(code string) string {
@@ -203,7 +194,7 @@ func wrongCode(code string) string {
 	return "000000"
 }
 
-func login(t *testing.T, svc *auth.Service, s *captureSender) auth.Session {
+func login(t *testing.T, svc *auth.AuthService, s *captureSender) auth.Session {
 	t.Helper()
 	ctx := context.Background()
 	ch, err := svc.RequestOTP(ctx, auth.RequestOTPRequest{Identifier: testPhone})

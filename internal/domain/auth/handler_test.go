@@ -34,7 +34,7 @@ func newRouter(otp config.OTP) (http.Handler, *captureSender) {
 	svc, _, sender := newService(otp)
 	r := gin.New()
 	r.Use(middleware.RequestID(), middleware.ErrorHandler(slog.New(slog.NewTextHandler(io.Discard, nil))))
-	auth.RegisterRoutes(r.Group("/api/v1"), auth.NewHandler(svc), middleware.Authenticate(svc))
+	auth.RegisterAuthRoutes(r.Group("/api/v1"), svc, middleware.Authenticate(svc))
 	return r, sender
 }
 
@@ -136,8 +136,8 @@ func TestHandler_RequestOTP(t *testing.T) {
 func TestHandler_ResendOTP(t *testing.T) {
 	r, sender := newRouter(defaultOTP())
 	first := requestOTP(t, r)
-
 	w := do(r, http.MethodPost, "/api/v1/auth/resend-otp", fmt.Sprintf(`{"otp_resend_key":%q}`, first.Data["otp_resend_key"]), "")
+
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, body = %s", w.Code, w.Body)
 	}

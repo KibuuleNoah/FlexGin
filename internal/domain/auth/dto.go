@@ -11,7 +11,7 @@ type RequestOTPRequest struct {
 }
 
 type ResendOTPRequest struct {
-	ResendKey string `json:"otp_resend_key" binding:"required,uuid"`
+	ResendKey string `json:"otp_resend_key" binding:"required,len=6"`
 }
 
 type VerifyOTPRequest struct {
@@ -47,7 +47,7 @@ type AuthResponse struct {
 }
 
 func ToChallengeResponse(c Challenge) ChallengeResponse {
-	return ChallengeResponse{UserID: c.UserID, ResendKey: c.ResendKey.String(), ExpiresAt: c.ExpiresAt}
+	return ChallengeResponse{UserID: c.UserID, ResendKey: c.ResendKey, ExpiresAt: c.ExpiresAt}
 }
 
 func ToUserResponse(u store.User) UserResponse {

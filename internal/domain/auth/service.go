@@ -16,11 +16,12 @@ import (
 	"flexgin/internal/apperror"
 	"flexgin/internal/config"
 	"flexgin/internal/store"
+	"flexgin/internal/utils"
 )
 
 type Challenge struct {
 	UserID    string
-	ResendKey uuid.UUID
+	ResendKey string
 	ExpiresAt time.Time
 }
 
@@ -72,11 +73,9 @@ func (s *AuthService) RequestOTP(ctx context.Context, req RequestOTPRequest) (Ch
 }
 
 func (s *AuthService) ResendOTP(ctx context.Context, resendKey string) (Challenge, error) {
-	_, err := uuid.Parse(resendKey)
-	if err != nil {
-		return Challenge{}, ErrInvalidResendKey
-	}
 	ch, err := s.q.GetOTPChallenge(ctx, resendKey)
+	utils.PrintPretty(s.q)
+	fmt.Println(s.q)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Challenge{}, ErrInvalidResendKey
 	}
@@ -105,21 +104,26 @@ func (s *AuthService) issueOTP(ctx context.Context, u store.User) (Challenge, er
 	if err != nil {
 		return Challenge{}, fmt.Errorf("generate otp: %w", err)
 	}
-	id := uuid.New()
 	exp := time.Now().Add(s.otp.TTL)
 
-	if _, err := s.q.CreateOTPChallenge(ctx, store.CreateOTPChallengeParams{
-		ID:        fmt.Sprintf("%d", id),
+	id, err := utils.GenerateID(6)
+	if err != nil {
+		return Challenge{}, fmt.Errorf("generate id: %w", err)
+	}
+	ch, err := s.q.CreateOTPChallenge(ctx, store.CreateOTPChallengeParams{
+		ID:        id,
 		UserID:    u.ID,
-		CodeHash:  hashOTP(s.tokens.secret, id.String(), code),
+		CodeHash:  hashOTP(s.tokens.secret, code, code),
 		ExpiresAt: exp,
-	}); err != nil {
+	})
+
+	if err != nil {
 		return Challenge{}, fmt.Errorf("create challenge: %w", err)
 	}
 	if err := s.sender.Send(ctx, u.Identifier, code); err != nil {
 		return Challenge{}, fmt.Errorf("send otp: %w", err)
 	}
-	return Challenge{UserID: u.ID, ResendKey: id, ExpiresAt: exp}, nil
+	return Challenge{UserID: u.ID, ResendKey: ch.ID, ExpiresAt: exp}, nil
 }
 
 func (s *AuthService) VerifyOTP(ctx context.Context, req VerifyOTPRequest) (Session, error) {
@@ -134,7 +138,7 @@ func (s *AuthService) VerifyOTP(ctx context.Context, req VerifyOTPRequest) (Sess
 		return Session{}, ErrInvalidOTP
 	}
 
-	want := hashOTP(s.tokens.secret, ch.ID, req.OTP)
+	want := hashOTP(s.tokens.secret, req.OTP, req.OTP)
 	if !hmac.Equal([]byte(ch.CodeHash), []byte(want)) {
 		if err := s.q.IncrementOTPAttempts(ctx, ch.ID); err != nil {
 			return Session{}, fmt.Errorf("increment attempts: %w", err)

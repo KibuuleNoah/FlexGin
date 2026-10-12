@@ -26,7 +26,7 @@ func TestService_RequestOTP(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if ch.UserID == "" || ch.ResendKey == uuid.Nil || !ch.ExpiresAt.After(time.Now()) {
+		if ch.UserID == "" || ch.ResendKey == "" || !ch.ExpiresAt.After(time.Now()) {
 			t.Fatalf("bad challenge: %+v", ch)
 		}
 		if sender.calls != 1 || sender.phone != testPhone || !sixDigits.MatchString(sender.code) {
@@ -89,7 +89,7 @@ func TestService_ResendOTP(t *testing.T) {
 		first, _ := svc.RequestOTP(ctx, auth.RequestOTPRequest{Identifier: testPhone})
 		oldCode := sender.code
 
-		second, err := svc.ResendOTP(ctx, first.ResendKey.String())
+		second, err := svc.ResendOTP(ctx, first.ResendKey)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -118,7 +118,7 @@ func TestService_ResendOTP(t *testing.T) {
 		svc, q, _ := newService(defaultOTP())
 		ch, _ := svc.RequestOTP(ctx, auth.RequestOTPRequest{Identifier: testPhone})
 		q.expireChallenges()
-		if _, err := svc.ResendOTP(ctx, ch.ResendKey.String()); !errors.Is(err, auth.ErrInvalidResendKey) {
+		if _, err := svc.ResendOTP(ctx, ch.ResendKey); !errors.Is(err, auth.ErrInvalidResendKey) {
 			t.Fatalf("want ErrInvalidResendKey, got %v", err)
 		}
 	})
