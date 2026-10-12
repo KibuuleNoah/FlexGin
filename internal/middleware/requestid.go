@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"flexgin/internal/httpx" // replace "yourmodule" with the module path from go.mod
+	"flexgin/internal/httpx"
 )
 
 const requestIDHeader = "X-Request-ID"

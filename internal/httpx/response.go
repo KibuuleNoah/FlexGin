@@ -8,12 +8,14 @@ import (
 	"flexgin/internal/apperror"
 )
 
+// Envelope is the standard response envelope.
 type Envelope struct {
 	Data  any        `json:"data,omitempty"`
 	Meta  *Meta      `json:"meta,omitempty"`
 	Error *ErrorBody `json:"error,omitempty"`
 }
 
+// ErrorBody is the standard error envelope.
 type ErrorBody struct {
 	Code      string            `json:"code"`
 	Message   string            `json:"message"`
@@ -21,12 +23,14 @@ type ErrorBody struct {
 	RequestID string            `json:"request_id,omitempty"`
 }
 
+// Meta is the standard pagination envelope.
 type Meta struct {
 	Page    int `json:"page"`
 	PerPage int `json:"per_page"`
 	Total   int `json:"total"`
 }
 
+// OK renders the standard envelope.
 func OK(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, Envelope{Data: data})
 }

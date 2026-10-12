@@ -1,0 +1,136 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Description for what the app is expecting (e.g. \"Bearer \u003ctoken\u003e\")",
+        "title": "FlexGin API",
+        "termsOfService": "http://swagger.io",
+        "contact": {
+            "name": "API Support",
+            "url": "http://swagger.io",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://apache.org"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/articles": {
+            "post": {
+                "description": "Creates a new article",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "articles"
+                ],
+                "summary": "Create an article",
+                "parameters": [
+                    {
+                        "description": "Article data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/article.CreateArticleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Article data",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.Envelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "article.CreateArticleRequest": {
+            "type": "object",
+            "required": [
+                "body",
+                "slug",
+                "title"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "published": {
+                    "type": "boolean"
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 3
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 3
+                }
+            }
+        },
+        "httpx.Envelope": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "$ref": "#/definitions/httpx.ErrorBody"
+                },
+                "meta": {
+                    "$ref": "#/definitions/httpx.Meta"
+                }
+            }
+        },
+        "httpx.ErrorBody": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "httpx.Meta": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

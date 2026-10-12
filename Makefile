@@ -82,6 +82,10 @@ migrate-reset:
 migrate-create:
 	@$(GOOSE) create $(name) sql -s
 
+# swagger
+swagger:
+	@swag init -g cmd/api/main.go
+
 # Clean
 clean:
 	@echo "Cleaning..."

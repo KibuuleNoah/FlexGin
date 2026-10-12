@@ -16,6 +16,24 @@ import (
 	"flexgin/internal/server"
 )
 
+//	@title			FlexGin API
+//	@version		1.0
+//	@description	This is the API server for the FlexGin application.
+//	@termsOfService	http://swagger.io
+
+//	@contact.name	API Support
+//	@contact.url	http://swagger.io
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://apache.org
+
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+
+// @in							header
+// @name						Authorization
+// @description				Description for what the app is expecting (e.g. "Bearer <token>")
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

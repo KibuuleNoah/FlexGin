@@ -11,7 +11,19 @@ import (
 	"flexgin/internal/httpx"
 	"flexgin/internal/middleware"
 	"flexgin/internal/store"
+
+	_ "flexgin/docs"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+import "github.com/swaggo/swag"
+
+func init() {
+	if _, err := swag.ReadDoc(); err != nil {
+		panic("swagger: " + err.Error())
+	}
+}
 
 // RegisterRoutes builds the router: global middleware, probes, then every feature group.
 func (s *Server) RegisterRoutes(q *store.Queries) http.Handler {
@@ -23,8 +35,12 @@ func (s *Server) RegisterRoutes(q *store.Queries) http.Handler {
 	r := gin.New()
 	r.Use(middleware.Global(s.cfg, s.log)...)
 
+	if !s.cfg.IsProd() {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
+
 	s.registerProbeRoutes(r)
-	s.registerAPIRoutes(r, q)
+	s.registerAPIV1Routes(r, q)
 
 	return r
 }
@@ -36,7 +52,7 @@ func (s *Server) registerProbeRoutes(r *gin.Engine) {
 
 // registerAPIRoutes is the single place feature routes are mounted.
 // Adding a feature = one line here.
-func (s *Server) registerAPIRoutes(r *gin.Engine, q *store.Queries) {
+func (s *Server) registerAPIV1Routes(r *gin.Engine, q *store.Queries) {
 	v1 := r.Group("/api/v1")
 
 	article.RegisterArticleRoutes(v1, q)

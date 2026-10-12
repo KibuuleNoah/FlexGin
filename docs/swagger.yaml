@@ -1,0 +1,92 @@
+basePath: /api/v1
+definitions:
+  article.CreateArticleRequest:
+    properties:
+      body:
+        type: string
+      published:
+        type: boolean
+      slug:
+        maxLength: 200
+        minLength: 3
+        type: string
+      title:
+        maxLength: 200
+        minLength: 3
+        type: string
+    required:
+    - body
+    - slug
+    - title
+    type: object
+  httpx.Envelope:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/httpx.ErrorBody'
+      meta:
+        $ref: '#/definitions/httpx.Meta'
+    type: object
+  httpx.ErrorBody:
+    properties:
+      code:
+        type: string
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+      request_id:
+        type: string
+    type: object
+  httpx.Meta:
+    properties:
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://swagger.io
+  description: Description for what the app is expecting (e.g. "Bearer <token>")
+  license:
+    name: Apache 2.0
+    url: http://apache.org
+  termsOfService: http://swagger.io
+  title: FlexGin API
+  version: "1.0"
+paths:
+  /articles:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new article
+      parameters:
+      - description: Article data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/article.CreateArticleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Article data
+          schema:
+            $ref: '#/definitions/httpx.Envelope'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/httpx.Envelope'
+      summary: Create an article
+      tags:
+      - articles
+swagger: "2.0"

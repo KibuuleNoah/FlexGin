@@ -92,7 +92,7 @@ func TestHandler_Get_NotFound(t *testing.T) {
 
 func TestHandler_Get_BadID(t *testing.T) {
 	r := newTestRouter(newFakeQ())
-	w := do(r, http.MethodGet, "/api/v1/articles/abc", "")
+	w := do(r, http.MethodGet, "/api/v1/articles/ab", "")
 	if w.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d", w.Code)
 	}

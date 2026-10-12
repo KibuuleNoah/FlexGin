@@ -16,6 +16,18 @@ func NewArticleHandler(svc ArticleService) *ArticleHandler {
 
 // ArticleHandlers attach errors with c.Error and return; middleware.ErrorArticleHandler renders them.
 
+// @BasePath /api/v1
+
+// Create godoc
+// @Summary      Create an article
+// @Description  Creates a new article
+// @Tags         articles
+// @Accept       json
+// @Produce      json
+// @Param        body  body      CreateArticleRequest  true  "Article data"
+// @Success      201   {object}  httpx.Envelope        "Article data"
+// @Failure      400   {object}  httpx.Envelope        "Validation error"
+// @Router       /articles [post]
 func (h *ArticleHandler) Create(c *gin.Context) {
 	var req CreateArticleRequest
 	if err := httpx.BindJSON(c, &req); err != nil {
