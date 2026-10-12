@@ -7,6 +7,7 @@ package store
 import (
 	"database/sql"
 	"encoding/json"
+	"time"
 )
 
 type Article struct {
@@ -26,14 +27,36 @@ type CacheItem struct {
 	ExpiresAt sql.NullTime    `json:"expires_at"`
 }
 
+type OtpChallenge struct {
+	ID         string       `json:"id"`
+	UserID     string       `json:"user_id"`
+	CodeHash   string       `json:"code_hash"`
+	Attempts   int32        `json:"attempts"`
+	ExpiresAt  time.Time    `json:"expires_at"`
+	ConsumedAt sql.NullTime `json:"consumed_at"`
+	CreatedAt  int64        `json:"created_at"`
+}
+
+type Session struct {
+	ID          string       `json:"id"`
+	UserID      string       `json:"user_id"`
+	RefreshHash string       `json:"refresh_hash"`
+	ExpiresAt   time.Time    `json:"expires_at"`
+	RevokedAt   sql.NullTime `json:"revoked_at"`
+	CreatedAt   int64        `json:"created_at"`
+}
+
 type User struct {
-	ID          string        `json:"id"`
-	Username    string        `json:"username"`
-	PhoneNo     string        `json:"phone_no"`
-	AvatarUrl   *string       `json:"avatar_url"`
-	IsBanned    sql.NullBool  `json:"is_banned"`
-	Verified    bool          `json:"verified"`
-	CreatedAt   int64         `json:"created_at"`
-	UpdatedAt   int64         `json:"updated_at"`
-	LastLoginAt sql.NullInt64 `json:"last_login_at"`
+	ID            string        `json:"id"`
+	Username      *string       `json:"username"`
+	PasswordHash  *string       `json:"password_hash"`
+	Identifier    string        `json:"identifier"`
+	IdentifierAlt *string       `json:"identifier_alt"`
+	Role          string        `json:"role"`
+	AvatarUrl     *string       `json:"avatar_url"`
+	IsBanned      bool          `json:"is_banned"`
+	Verified      bool          `json:"verified"`
+	CreatedAt     int64         `json:"created_at"`
+	UpdatedAt     int64         `json:"updated_at"`
+	LastLoginAt   sql.NullInt64 `json:"last_login_at"`
 }

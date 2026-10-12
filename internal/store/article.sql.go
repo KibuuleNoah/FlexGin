@@ -162,11 +162,11 @@ RETURNING id, title, slug, body, author_id, published, created_at, updated_at
 `
 
 type UpdateArticleParams struct {
-	Title     sql.NullString `json:"title"`
-	Slug      sql.NullString `json:"slug"`
-	Body      *string        `json:"body"`
-	Published sql.NullBool   `json:"published"`
-	ID        string         `json:"id"`
+	Title     *string      `json:"title"`
+	Slug      *string      `json:"slug"`
+	Body      *string      `json:"body"`
+	Published sql.NullBool `json:"published"`
+	ID        string       `json:"id"`
 }
 
 func (q *Queries) UpdateArticle(ctx context.Context, arg UpdateArticleParams) (Article, error) {

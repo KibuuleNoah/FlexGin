@@ -9,13 +9,38 @@ import (
 )
 
 type Querier interface {
+	// atomic claim: only one concurrent refresh can win
+	ClaimRefreshSession(ctx context.Context, refreshHash string) (Session, error)
+	ConsumeOTPChallenge(ctx context.Context, id string) (int64, error)
 	CountArticles(ctx context.Context) (int64, error)
+	CountUsers(ctx context.Context) (int64, error)
 	CreateArticle(ctx context.Context, arg CreateArticleParams) (Article, error)
+	CreateOTPChallenge(ctx context.Context, arg CreateOTPChallengeParams) (OtpChallenge, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteArticle(ctx context.Context, id string) (int64, error)
+	DeleteUser(ctx context.Context, id string) (int64, error)
+	GetActiveOTPChallenge(ctx context.Context, userID string) (OtpChallenge, error)
 	GetArticle(ctx context.Context, id string) (Article, error)
 	GetArticleBySlug(ctx context.Context, slug string) (Article, error)
+	GetLatestOTPChallenge(ctx context.Context, userID string) (OtpChallenge, error)
+	GetOTPChallenge(ctx context.Context, id string) (OtpChallenge, error)
+	GetUserByID(ctx context.Context, id string) (User, error)
+	GetUserByIdentifier(ctx context.Context, identifier string) (User, error)
+	GetUserByIdentifierAlt(ctx context.Context, identifierAlt *string) (User, error)
+	IncrementOTPAttempts(ctx context.Context, id string) error
 	ListArticles(ctx context.Context, arg ListArticlesParams) ([]Article, error)
+	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	MarkUserVerified(ctx context.Context, id string) (User, error)
+	RevokeSession(ctx context.Context, id string) (int64, error)
+	SessionIsActive(ctx context.Context, id string) (bool, error)
+	SetUserBanned(ctx context.Context, arg SetUserBannedParams) (User, error)
+	SetUserRole(ctx context.Context, arg SetUserRoleParams) (User, error)
+	TouchUserLastLogin(ctx context.Context, id string) error
 	UpdateArticle(ctx context.Context, arg UpdateArticleParams) (Article, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	// OTP sign-up/login: creates a guest on first contact, returns the existing row otherwise
+	UpsertUser(ctx context.Context, identifier string) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

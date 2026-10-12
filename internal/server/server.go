@@ -8,24 +8,28 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"flexgin/internal/database"
+	"flexgin/internal/domain/auth"
 	"flexgin/internal/store"
 
 	"flexgin/internal/config"
 )
 
 type Server struct {
-	cfg config.Config
-	log *slog.Logger
-	db  *database.DB
+	cfg     config.Config
+	log     *slog.Logger
+	db      *database.DB
+	authSvc *auth.AuthService
 }
 
 func NewServer(cfg config.Config, log *slog.Logger, db *database.DB) *http.Server {
 	q := store.New(db)
+	authSvc := auth.NewAuthService(q, auth.NewTokenManager(cfg.JWT), auth.LogSender{Log: log, Enabled: !cfg.IsProd()}, cfg.OTP)
 
 	s := &Server{
-		cfg: cfg,
-		log: log,
-		db:  db,
+		cfg:     cfg,
+		log:     log,
+		db:      db,
+		authSvc: authSvc,
 	}
 
 	return &http.Server{

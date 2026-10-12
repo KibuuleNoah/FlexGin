@@ -1,93 +1,51 @@
 package middleware
 
 import (
-	"log"
-	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	"pajo/services"
+
+	"flexgin/internal/apperror"
+	"flexgin/internal/domain/auth"
 )
 
-// TokenAuth validates the JWT access token and sets userID in the context.
-func TokenAuth() gin.HandlerFunc {
-	Asvc := services.NewAuthService()
+// Authenticate requires "Authorization: Bearer <jwt>" with an active session.
+func Authenticate(svc *auth.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		accessDetails, err := Asvc.ExtractTokenMetadata(c.Request)
+		scheme, token, ok := strings.Cut(c.GetHeader("Authorization"), " ")
+		token = strings.TrimSpace(token)
+		if !ok || !strings.EqualFold(scheme, "Bearer") || token == "" {
+			abort(c, auth.ErrMissingToken)
+			return
+		}
+		claims, err := svc.Authenticate(c.Request.Context(), token)
 		if err != nil {
-			log.Println(err)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authentication Required"})
+			abort(c, err)
 			return
 		}
-
-		// log.Println("\n\n\n*****", tokenAuth)
-		// userID, err := authModel.FetchAuth(tokenAuth)
-		// if err != nil {
-		// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authentication Required"})
-		// 	return
-		// }
-
-		c.Set("userID", accessDetails.UserID)
+		auth.SetClaims(c, claims)
 		c.Next()
 	}
 }
 
-// AuthRequired handles dual authentication: Guest ID first, JWT fallback second.
-func GuestOrUserRequired() gin.HandlerFunc {
-
+// RequireRole must run after Authenticate.
+func RequireRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		guestID := c.GetHeader("X-GUEST-ID")
-
-		if guestID != "" {
-			// #####################################
-			// GUESTID VERIFICATION LOGIC HERE
-			// #####################################
-
-			c.Set("guestID", guestID)
-			c.Set("authType", "guest")
-			c.Next()
+		claims, ok := auth.ClaimsFrom(c)
+		if !ok {
+			abort(c, auth.ErrMissingToken)
 			return
 		}
-
-		userID := c.GetHeader("X-USER-ID")
-		if len(userID) != 6 {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authentication Required (No valid Guest ID or Token found)"})
+		if !slices.Contains(roles, claims.Role) {
+			abort(c, apperror.Forbidden("insufficient permissions"))
 			return
 		}
-
-		// accessDetails, err := Asvc.ExtractTokenMetadata(c.Request)
-		// if err != nil {
-		// 	log.Println(err)
-		// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authentication Required (No valid Guest ID or Token found)"})
-		// 	return
-		// }
-
-		// c.Set("userID", accessDetails.UserID)
-		c.Set("userID", userID)
-		c.Set("authType", "user")
 		c.Next()
 	}
 }
 
-func AuthRequired() gin.HandlerFunc {
-	// Asvc := services.NewAuthService()
-
-	return func(c *gin.Context) {
-		userID := c.GetHeader("X-USER-ID")
-
-		if len(userID) != 6 {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authentication Required (No valid Guest ID or Token found)"})
-			return
-		}
-
-		// accessDetails, err := Asvc.ExtractTokenMetadata(c.Request)
-		// if err != nil {
-		// 	log.Println(err)
-		// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authentication Required (No valid Guest ID or Token found)"})
-		// 	return
-		// }
-
-		// c.Set("userID", accessDetails.UserID)
-		c.Set("userID", userID)
-		c.Next()
-	}
+func abort(c *gin.Context, err error) {
+	_ = c.Error(err)
+	c.Abort()
 }

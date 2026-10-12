@@ -8,16 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"flexgin/internal/domain/article"
+	"flexgin/internal/domain/auth"
 	"flexgin/internal/httpx"
 	"flexgin/internal/middleware"
 	"flexgin/internal/store"
 
 	_ "flexgin/docs"
+
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/swag"
 )
-
-import "github.com/swaggo/swag"
 
 func init() {
 	if _, err := swag.ReadDoc(); err != nil {
@@ -54,7 +55,9 @@ func (s *Server) registerProbeRoutes(r *gin.Engine) {
 // Adding a feature = one line here.
 func (s *Server) registerAPIV1Routes(r *gin.Engine, q *store.Queries) {
 	v1 := r.Group("/api/v1")
+	authn := middleware.Authenticate(s.authSvc)
 
+	auth.RegisterAuthRoutes(v1, s.authSvc, authn)
 	article.RegisterArticleRoutes(v1, q)
 	// user.RegisterRoutes(v1, s.users)
 	// item.RegisterRoutes(v1, s.items)

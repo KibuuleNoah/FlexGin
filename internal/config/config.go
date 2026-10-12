@@ -123,7 +123,6 @@ func Load() (Config, error) {
 			Cooldown:    l.duration("OTP_COOLDOWN", 30*time.Second),
 			MaxAttempts: l.integer("OTP_MAX_ATTEMPTS", 5),
 		},
-
 		CORS: CORS{
 			AllowedOrigins:   l.list("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
 			AllowCredentials: l.boolean("CORS_ALLOW_CREDENTIALS", true),

@@ -1,22 +1,20 @@
--- ===== migrations/00002_create_users.sql (fixed) =====
 -- +goose Up
 -- +goose StatementBegin
 CREATE SEQUENCE IF NOT EXISTS users_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS users (
     id            TEXT PRIMARY KEY DEFAULT generate_short_id('users_id_seq'),
-    username      VARCHAR(255) NOT NULL,
+    username      VARCHAR(255),
     password_hash TEXT,
-    email         TEXT,
+    identifier    TEXT         NOT NULL UNIQUE,
+    identifier_alt TEXT,
     role          TEXT         NOT NULL DEFAULT 'guest',
-    phone_no      VARCHAR(16)  NOT NULL UNIQUE,
     avatar_url    TEXT,
     is_banned     BOOLEAN      NOT NULL DEFAULT FALSE,
     verified      BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at    BIGINT       NOT NULL,
     updated_at    BIGINT       NOT NULL,
     last_login_at BIGINT,
-    CONSTRAINT users_email_key UNIQUE (email),
     CONSTRAINT users_role_check CHECK (role IN ('guest', 'user', 'admin'))
 );
 

@@ -1,23 +1,23 @@
 -- name: CreateUser :one
-INSERT INTO users (username, phone_no, email, password_hash, avatar_url)
+INSERT INTO users (username, identifier, identifier_alt, password_hash, avatar_url)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- OTP sign-up/login: creates a guest on first contact, returns the existing row otherwise
--- name: UpsertUserByPhone :one
-INSERT INTO users (username, phone_no)
-VALUES ($1, $2)
-ON CONFLICT (phone_no) DO UPDATE SET phone_no = EXCLUDED.phone_no
+-- name: UpsertUser :one
+INSERT INTO users (identifier)
+VALUES ($1)
+ON CONFLICT (identifier) DO UPDATE SET identifier = EXCLUDED.identifier
 RETURNING *;
 
 -- name: GetUserByID :one
 SELECT * FROM users WHERE id = $1;
 
--- name: GetUserByPhone :one
-SELECT * FROM users WHERE phone_no = $1;
+-- name: GetUserByIdentifier :one
+SELECT * FROM users WHERE identifier = $1;
 
--- name: GetUserByEmail :one
-SELECT * FROM users WHERE email = $1;
+-- name: GetUserByIdentifierAlt :one
+SELECT * FROM users WHERE identifier_alt = $1;
 
 -- name: ListUsers :many
 SELECT * FROM users
@@ -30,8 +30,8 @@ SELECT count(*) FROM users;
 -- name: UpdateUser :one
 UPDATE users
 SET username   = COALESCE(sqlc.narg(username), username),
-    email      = COALESCE(sqlc.narg(email), email),
-    phone_no   = COALESCE(sqlc.narg(phone_no), phone_no),
+    identifier = COALESCE(sqlc.narg(identifier), identifier),
+    identifier_alt = COALESCE(sqlc.narg(identifier_alt), identifier_alt),
     avatar_url = COALESCE(sqlc.narg(avatar_url), avatar_url)
 WHERE id = sqlc.arg(id)
 RETURNING *;

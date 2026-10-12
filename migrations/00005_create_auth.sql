@@ -4,17 +4,17 @@
 CREATE SEQUENCE IF NOT EXISTS sessions_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 CREATE TABLE sessions (
     id TEXT PRIMARY KEY DEFAULT generate_short_id('sessions_id_seq'),
-    user_id      BIGINT      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id      TEXT      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     refresh_hash TEXT        NOT NULL,
     expires_at   TIMESTAMPTZ NOT NULL,
     revoked_at   TIMESTAMPTZ,
-    created_at  BIGINT,
+    created_at  BIGINT NOT NULL,
     CONSTRAINT sessions_refresh_hash_key UNIQUE (refresh_hash)
 );
 CREATE INDEX idx_sessions_user_id ON sessions (user_id);
 
 CREATE TRIGGER sessions_created_at
-  BEFORE INSERT ON users
+  BEFORE INSERT ON sessions
   FOR EACH ROW EXECUTE PROCEDURE created_at_column();
 
 -- id doubles as the "otp resend key"
@@ -26,7 +26,7 @@ CREATE TABLE otp_challenges (
     attempts    INT         NOT NULL DEFAULT 0,
     expires_at  TIMESTAMPTZ NOT NULL,
     consumed_at TIMESTAMPTZ,
-    created_at  BIGINT
+    created_at  BIGINT NOT NULL
 );
 
 CREATE INDEX idx_otp_challenges_user_created ON otp_challenges (user_id, created_at DESC);
