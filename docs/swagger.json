@@ -141,6 +141,8 @@
                 "summary": "Get an article",
                 "parameters": [
                     {
+                        "maxLength": 6,
+                        "minLength": 6,
                         "type": "string",
                         "description": "Article ID",
                         "name": "id",
@@ -195,6 +197,8 @@
                 "summary": "Delete an article",
                 "parameters": [
                     {
+                        "maxLength": 6,
+                        "minLength": 6,
                         "type": "string",
                         "description": "Article ID",
                         "name": "id",
@@ -237,6 +241,8 @@
                 "summary": "Update an article",
                 "parameters": [
                     {
+                        "maxLength": 6,
+                        "minLength": 6,
                         "type": "string",
                         "description": "Article ID",
                         "name": "id",

@@ -15,6 +15,7 @@ const (
 	KindUnauthorized
 	KindForbidden
 	KindTooManyRequests
+	KindBadRequest
 )
 
 func (k Kind) HTTPStatus() int {
@@ -31,7 +32,8 @@ func (k Kind) HTTPStatus() int {
 		return http.StatusForbidden
 	case KindTooManyRequests:
 		return http.StatusTooManyRequests
-
+	case KindBadRequest:
+		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
 	}

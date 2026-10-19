@@ -155,8 +155,7 @@ UPDATE articles
 SET title      = COALESCE($1, title),
     slug       = COALESCE($2, slug),
     body       = COALESCE($3, body),
-    published  = COALESCE($4, published),
-    updated_at = now()
+    published  = COALESCE($4, published)
 WHERE id = $5
 RETURNING id, title, slug, body, author_id, published, created_at, updated_at
 `

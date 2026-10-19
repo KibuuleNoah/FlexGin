@@ -1,6 +1,6 @@
 package article
 
-import "flexgin/internal/apperror" // replace "yourmodule" with the module path from go.mod
+import "flexgin/internal/apperror"
 
 var (
 	ErrNotFound  = apperror.NotFound("article_not_found", "article not found")

@@ -148,6 +148,8 @@ const docTemplate = `{
                 "summary": "Get an article",
                 "parameters": [
                     {
+                        "maxLength": 6,
+                        "minLength": 6,
                         "type": "string",
                         "description": "Article ID",
                         "name": "id",
@@ -202,6 +204,8 @@ const docTemplate = `{
                 "summary": "Delete an article",
                 "parameters": [
                     {
+                        "maxLength": 6,
+                        "minLength": 6,
                         "type": "string",
                         "description": "Article ID",
                         "name": "id",
@@ -244,6 +248,8 @@ const docTemplate = `{
                 "summary": "Update an article",
                 "parameters": [
                     {
+                        "maxLength": 6,
+                        "minLength": 6,
                         "type": "string",
                         "description": "Article ID",
                         "name": "id",

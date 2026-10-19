@@ -171,6 +171,8 @@ paths:
       parameters:
       - description: Article ID
         in: path
+        maxLength: 6
+        minLength: 6
         name: id
         required: true
         type: string
@@ -199,6 +201,8 @@ paths:
       parameters:
       - description: Article ID
         in: path
+        maxLength: 6
+        minLength: 6
         name: id
         required: true
         type: string
@@ -232,6 +236,8 @@ paths:
       parameters:
       - description: Article ID
         in: path
+        maxLength: 6
+        minLength: 6
         name: id
         required: true
         type: string

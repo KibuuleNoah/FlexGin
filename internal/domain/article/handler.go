@@ -1,6 +1,8 @@
 package article
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 
 	"flexgin/internal/httpx"
@@ -46,7 +48,7 @@ func (h *ArticleHandler) Create(c *gin.Context) {
 // @Tags         articles
 // @Accept       json
 // @Produce      json
-// @Param        id  path      string  true  "Article ID"
+// @Param        id  path      string  true  "Article ID" minlength(6) maxlength(6)
 // @Success      200  {object}  httpx.EnvelopD{data=store.Article}        "Article data"
 // @Failure      400  {object}  httpx.EnvelopD        				       "Validation error"
 // @Failure      404  {object}  httpx.EnvelopD                       "Not found"
@@ -94,7 +96,7 @@ func (h *ArticleHandler) List(c *gin.Context) {
 // @Tags         articles
 // @Accept       json
 // @Produce      json
-// @Param        id  path      string  true  "Article ID"
+// @Param        id  path      string  true  "Article ID" minlength(6) maxlength(6)
 // @Param        body  body      UpdateArticleRequest  true  "Article data"
 // @Success      200  {object}  httpx.EnvelopD{data=store.Article}        "Article data"
 // @Failure      400  {object}  httpx.EnvelopD                       "Validation error"
@@ -125,7 +127,7 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 // @Tags         articles
 // @Accept       json
 // @Produce      json
-// @Param        id  path      string  true  "Article ID"
+// @Param        id  path      string  true  "Article ID" minlength(6) maxlength(6)
 // @Success      204  {object}  string                  "Article deleted Successfully"
 // @Failure      400  {object}  httpx.EnvelopD        "Validation error"
 // @Failure      404  {object}  httpx.EnvelopD        "Not found"

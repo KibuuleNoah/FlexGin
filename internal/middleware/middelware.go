@@ -20,5 +20,6 @@ func Global(cfg config.Config, log *slog.Logger) []gin.HandlerFunc {
 		CORS(cfg.CORS),
 		Timeout(cfg.HTTP.RequestTimeout),
 		ErrorHandler(log),
+		ValidateIDParam(),
 	}
 }
