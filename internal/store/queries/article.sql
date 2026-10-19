@@ -22,8 +22,7 @@ UPDATE articles
 SET title      = COALESCE(sqlc.narg(title), title),
     slug       = COALESCE(sqlc.narg(slug), slug),
     body       = COALESCE(sqlc.narg(body), body),
-    published  = COALESCE(sqlc.narg(published), published),
-    updated_at = now()
+    published  = COALESCE(sqlc.narg(published), published)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
