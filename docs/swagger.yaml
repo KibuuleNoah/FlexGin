@@ -19,7 +19,23 @@ definitions:
     - slug
     - title
     type: object
-  httpx.Envelope:
+  article.UpdateArticleRequest:
+    properties:
+      body:
+        minLength: 1
+        type: string
+      published:
+        type: boolean
+      slug:
+        maxLength: 200
+        minLength: 3
+        type: string
+      title:
+        maxLength: 200
+        minLength: 3
+        type: string
+    type: object
+  httpx.EnvelopD:
     properties:
       data: {}
       error:
@@ -49,6 +65,25 @@ definitions:
       total:
         type: integer
     type: object
+  store.Article:
+    properties:
+      author_id:
+        type: string
+      body:
+        type: string
+      created_at:
+        type: integer
+      id:
+        type: string
+      published:
+        type: boolean
+      slug:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -64,6 +99,40 @@ info:
   version: "1.0"
 paths:
   /articles:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of articles
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Article data
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpx.EnvelopD'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/store.Article'
+                  type: array
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+      summary: List articles
+      tags:
+      - articles
     post:
       consumes:
       - application/json
@@ -81,12 +150,118 @@ paths:
         "201":
           description: Article data
           schema:
-            $ref: '#/definitions/httpx.Envelope'
+            allOf:
+            - $ref: '#/definitions/httpx.EnvelopD'
+            - properties:
+                data:
+                  $ref: '#/definitions/store.Article'
+              type: object
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/httpx.Envelope'
+            $ref: '#/definitions/httpx.EnvelopD'
       summary: Create an article
+      tags:
+      - articles
+  /articles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a single article
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Article deleted Successfully
+          schema:
+            type: string
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+      summary: Delete an article
+      tags:
+      - articles
+    get:
+      consumes:
+      - application/json
+      description: Returns a single article
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Article data
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpx.EnvelopD'
+            - properties:
+                data:
+                  $ref: '#/definitions/store.Article'
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+      summary: Get an article
+      tags:
+      - articles
+    patch:
+      consumes:
+      - application/json
+      description: Updates a single article
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Article data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/article.UpdateArticleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Article data
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpx.EnvelopD'
+            - properties:
+                data:
+                  $ref: '#/definitions/store.Article'
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/httpx.EnvelopD'
+      summary: Update an article
       tags:
       - articles
 swagger: "2.0"
