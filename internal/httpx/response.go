@@ -9,11 +9,14 @@ import (
 )
 
 // Envelope is the standard response envelope.
-type Envelope struct {
-	Data  any        `json:"data,omitempty"`
+type Envelope[T any] struct {
+	Data  T          `json:"data,omitempty"`
 	Meta  *Meta      `json:"meta,omitempty"`
 	Error *ErrorBody `json:"error,omitempty"`
 }
+
+// EnvelopD is for documentation purposes only by swagger.
+type EnvelopD Envelope[any]
 
 // ErrorBody is the standard error envelope.
 type ErrorBody struct {
@@ -31,27 +34,27 @@ type Meta struct {
 }
 
 // OK renders the standard envelope.
-func OK(c *gin.Context, data any) {
-	c.JSON(http.StatusOK, Envelope{Data: data})
+func OK[T any](c *gin.Context, data T) {
+	c.JSON(http.StatusOK, Envelope[T]{Data: data})
 }
 
-func Created(c *gin.Context, data any) {
-	c.JSON(http.StatusCreated, Envelope{Data: data})
+func Created[T any](c *gin.Context, data T) {
+	c.JSON(http.StatusCreated, Envelope[T]{Data: data})
 }
 
 func NoContent(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func List(c *gin.Context, data any, meta Meta) {
-	c.JSON(http.StatusOK, Envelope{Data: data, Meta: &meta})
+func List[T any](c *gin.Context, data []T, meta Meta) {
+	c.JSON(http.StatusOK, Envelope[[]T]{Data: data, Meta: &meta})
 }
 
 // WriteError renders any error as the standard envelope.
 // Called by the error middleware; handlers just do c.Error(err) and return.
 func WriteError(c *gin.Context, err error) {
 	ae := apperror.From(err)
-	c.AbortWithStatusJSON(ae.Kind.HTTPStatus(), Envelope{
+	c.AbortWithStatusJSON(ae.Kind.HTTPStatus(), Envelope[any]{
 		Error: &ErrorBody{
 			Code:      ae.Code,
 			Message:   ae.Message,
