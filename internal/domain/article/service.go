@@ -75,8 +75,8 @@ func (s *ArticleService) Update(ctx context.Context, id string, req UpdateArticl
 		ctx,
 		store.UpdateArticleParams{
 			ID:        id,
-			Title:     utils.ToNullString(req.Title),
-			Slug:      utils.ToNullString(req.Slug),
+			Title:     req.Title,
+			Slug:      req.Slug,
 			Body:      req.Body,
 			Published: utils.ToNullBool(req.Published),
 		},
