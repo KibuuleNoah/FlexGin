@@ -1,4 +1,3 @@
-// ===== internal/article/service.go =====
 package article
 
 import (

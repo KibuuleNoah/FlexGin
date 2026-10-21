@@ -1,8 +1,6 @@
 package article
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 
 	"flexgin/internal/httpx"

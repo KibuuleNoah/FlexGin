@@ -197,6 +197,8 @@ make itest
 - Run `make migrate-up` as a deploy step, not at app startup.
 - CI should run `make sqlc-check`, `make lint`, and `make test`.
 
-## License
+---
 
-MIT
+<div align="center">
+  <p>© 2026 Kibuule Noah. Built with passion.</p>
+</div>
