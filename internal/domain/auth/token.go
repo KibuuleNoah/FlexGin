@@ -21,7 +21,7 @@ const (
 	claimsKey = "auth.claims"
 )
 
-// Claims.ID (jti) is the session id.
+// Claims.ID (jti) is the session id
 type Claims struct {
 	UserID string `json:"uid"`
 	Role   string `json:"role"`
@@ -75,7 +75,7 @@ func (m *TokenManager) ParseAccess(raw string) (Claims, error) {
 	return claims, nil
 }
 
-// Refresh tokens are opaque; only the SHA-256 is stored.
+// Refresh tokens are opaque; only the SHA-256 is stored
 func newRefreshToken() (raw, hash string, err error) {
 	b := make([]byte, 32)
 	if _, err = rand.Read(b); err != nil {

@@ -25,7 +25,7 @@ func (p Page) Meta(total int) Meta {
 	return Meta{Page: p.Page, PerPage: p.PerPage, Total: total}
 }
 
-// ParsePage reads ?page= and ?per_page= with defaults and an upper bound.
+// ParsePage reads ?page= and ?per_page= with defaults and an upper bound
 func ParsePage(c *gin.Context) (Page, error) {
 	p := Page{Page: 1, PerPage: defaultPerPage}
 	fields := map[string]string{}

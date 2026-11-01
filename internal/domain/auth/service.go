@@ -59,7 +59,7 @@ func normalizeIdentifier(raw string) (string, error) {
 	})
 }
 
-// RequestOTP signs up the identifier if new, then sends a code.
+// RequestOTP signs up the identifier if new, then sends a code
 func (s *AuthService) RequestOTP(ctx context.Context, req RequestOTPRequest) (Challenge, error) {
 	identifier, err := normalizeIdentifier(req.Identifier)
 	if err != nil {
@@ -161,7 +161,7 @@ func (s *AuthService) VerifyOTP(ctx context.Context, req VerifyOTPRequest) (Sess
 	return s.newSession(ctx, u)
 }
 
-// Refresh rotates: the presented refresh token is revoked and a new pair is issued.
+// Refresh rotates: the presented refresh token is revoked and a new pair is issued
 func (s *AuthService) Refresh(ctx context.Context, raw string) (Session, error) {
 	old, err := s.q.ClaimRefreshSession(ctx, hashRefresh(raw))
 	if errors.Is(err, sql.ErrNoRows) {
@@ -188,7 +188,7 @@ func (s *AuthService) Logout(ctx context.Context, sessionID string) error {
 	return nil
 }
 
-// Authenticate validates the JWT and that its session is still active (immediate logout).
+// Authenticate validates the JWT and that its session is still active (immediate logout)
 func (s *AuthService) Authenticate(ctx context.Context, raw string) (Claims, error) {
 	cl, err := s.tokens.ParseAccess(raw)
 	if err != nil {

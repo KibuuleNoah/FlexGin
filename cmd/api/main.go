@@ -18,7 +18,7 @@ import (
 
 //	@title			FlexGin API
 //	@version		1.0
-//	@description	This is the API server for the FlexGin application.
+//	@description	This is the API server for the FlexGin application
 //	@termsOfService	http://swagger.io
 
 //	@contact.name	API Support
@@ -35,11 +35,11 @@ import (
 // @name						Authorization
 // @description				Description for what the app is expecting (e.g. "Bearer <token>")
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
-	// Create context that listens for the interrupt signal from the OS.
+	// Create context that listens for the interrupt signal from the OS
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// Listen for the interrupt signal.
+	// Listen for the interrupt signal
 	<-ctx.Done()
 
 	log.Println("shutting down gracefully, press Ctrl+C again to force")

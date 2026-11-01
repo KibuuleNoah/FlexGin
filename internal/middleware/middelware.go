@@ -9,9 +9,9 @@ import (
 )
 
 // Global returns the default stack in the order it must run:
-// RequestID -> Logger -> Recovery -> CORS -> Timeout -> ErrorHandler.
-// Logger sits outside Recovery so panics are logged with their final status.
-// ErrorHandler is innermost so it sees errors from handlers.
+// RequestID -> Logger -> Recovery -> CORS -> Timeout -> ErrorHandler
+// Logger sits outside Recovery so panics are logged with their final status
+// ErrorHandler is innermost so it sees errors from handlers
 func Global(cfg config.Config, log *slog.Logger) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		RequestID(),

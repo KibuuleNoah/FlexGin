@@ -12,7 +12,7 @@ import (
 const requestIDHeader = "X-Request-ID"
 
 // RequestID reuses a sane inbound X-Request-ID or generates one,
-// stores it in the gin context, and echoes it on the response.
+// stores it in the gin context, and echoes it on the response
 func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.GetHeader(requestIDHeader)

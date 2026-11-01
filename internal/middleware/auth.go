@@ -10,7 +10,7 @@ import (
 	"flexgin/internal/domain/auth"
 )
 
-// Authenticate requires "Authorization: Bearer <jwt>" with an active session.
+// Authenticate requires "Authorization: Bearer <jwt>" with an active session
 func Authenticate(svc *auth.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		scheme, token, ok := strings.Cut(c.GetHeader("Authorization"), " ")
@@ -29,7 +29,7 @@ func Authenticate(svc *auth.AuthService) gin.HandlerFunc {
 	}
 }
 
-// RequireRole must run after Authenticate.
+// RequireRole must run after Authenticate
 func RequireRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, ok := auth.ClaimsFrom(c)

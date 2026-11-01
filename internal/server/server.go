@@ -43,7 +43,7 @@ func NewServer(cfg config.Config, log *slog.Logger, db *database.DB) *http.Serve
 	}
 }
 
-// Shutdown drains the HTTP server, then closes the DB pool.
+// Shutdown drains the HTTP server, then closes the DB pool
 // func Shutdown(ctx context.Context, srv *http.Server, db *database.DB) error {
 // 	err := srv.Shutdown(ctx)
 // 	if cerr := db.Close(); cerr != nil {

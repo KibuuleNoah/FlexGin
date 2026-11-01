@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// New returns a JSON logger in prod/staging and a text logger in dev.
+// New returns a JSON logger in prod/staging and a text logger in dev
 func New(env, level string) *slog.Logger {
 	opts := &slog.HandlerOptions{Level: parseLevel(level)}
 

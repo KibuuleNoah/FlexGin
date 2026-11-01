@@ -39,8 +39,8 @@ func (k Kind) HTTPStatus() int {
 	}
 }
 
-// Error is the only error type handlers and middleware need to understand.
-// Err is the wrapped cause: logged, never sent to the client.
+// Error is the only error type handlers and middleware need to understand
+// Err is the wrapped cause: logged, never sent to the client
 type Error struct {
 	Kind    Kind
 	Code    string            // stable machine-readable code, e.g. "article_not_found"
@@ -82,12 +82,12 @@ func TooManyRequests(code, msg string) *Error {
 	return &Error{Kind: KindTooManyRequests, Code: code, Message: msg}
 }
 
-// Internal wraps an unexpected error. The cause is logged but never exposed.
+// Internal wraps an unexpected error. The cause is logged but never exposed
 func Internal(err error) *Error {
 	return &Error{Kind: KindInternal, Code: "internal_error", Message: "internal server error", Err: err}
 }
 
-// From converts any error into *Error. Unknown errors become Internal.
+// From converts any error into *Error. Unknown errors become Internal
 func From(err error) *Error {
 	var ae *Error
 	if errors.As(err, &ae) {

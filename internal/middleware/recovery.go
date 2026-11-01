@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Recovery turns panics into a 500 envelope and logs the stack.
+// Recovery turns panics into a 500 envelope and logs the stack
 func Recovery(log *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

@@ -10,8 +10,8 @@ import (
 )
 
 // ErrorHandler renders the first error attached via c.Error(err) as the
-// standard envelope. Handlers attach the error and return; nothing else.
-// Internal errors are logged with their cause; clients only see the safe message.
+// standard envelope. Handlers attach the error and return; nothing else
+// Internal errors are logged with their cause; clients only see the safe message
 func ErrorHandler(log *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()

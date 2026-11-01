@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// authn is injected so auth never imports the middleware package.
+// authn is injected so auth never imports the middleware package
 
 func RegisterAuthRoutes(rg *gin.RouterGroup, authSvc *AuthService, authn gin.HandlerFunc) {
 	h := NewAuthHandler(authSvc)

@@ -9,7 +9,7 @@ import (
 	"flexgin/internal/httpx"
 )
 
-// RequestLogger logs one structured line per request after it completes.
+// RequestLogger logs one structured line per request after it completes
 func RequestLogger(log *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()

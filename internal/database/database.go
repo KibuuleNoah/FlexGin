@@ -12,7 +12,7 @@ import (
 	"flexgin/internal/config"
 )
 
-// DB wraps *sql.DB. Construct once in main and inject into repositories.
+// DB wraps *sql.DB. Construct once in main and inject into repositories
 type DB struct {
 	*sql.DB
 }
@@ -39,7 +39,7 @@ func New(cfg config.DB) (*DB, error) {
 	return db, nil
 }
 
-// Health is used by /readyz.
+// Health is used by /readyz
 func (d *DB) Health(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
@@ -49,7 +49,7 @@ func (d *DB) Health(ctx context.Context) error {
 	return nil
 }
 
-// WithTx runs fn in a transaction. It commits on nil, rolls back on error or panic.
+// WithTx runs fn in a transaction. It commits on nil, rolls back on error or panic
 func (d *DB) WithTx(ctx context.Context, fn func(tx *sql.Tx) error) error {
 	tx, err := d.BeginTx(ctx, nil)
 	if err != nil {

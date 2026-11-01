@@ -13,8 +13,8 @@ import (
 	"flexgin/internal/apperror"
 )
 
-// UseJSONFieldNames makes validation errors report json tag names instead of Go field names.
-// Call once at startup, before serving requests.
+// UseJSONFieldNames makes validation errors report json tag names instead of Go field names
+// Call once at startup, before serving requests
 func UseJSONFieldNames() {
 	v, ok := binding.Validator.Engine().(*validator.Validate)
 	if !ok {
@@ -29,17 +29,17 @@ func UseJSONFieldNames() {
 	})
 }
 
-// BindJSON decodes and validates the request body into dst.
+// BindJSON decodes and validates the request body into dst
 func BindJSON(c *gin.Context, dst any) error {
 	return toAppError(c.ShouldBindJSON(dst), "invalid request body")
 }
 
-// BindQuery decodes and validates query params into dst.
+// BindQuery decodes and validates query params into dst
 func BindQuery(c *gin.Context, dst any) error {
 	return toAppError(c.ShouldBindQuery(dst), "invalid query parameters")
 }
 
-// ParamInt64 parses a positive int64 path param.
+// ParamInt64 parses a positive int64 path param
 func ParamInt64(c *gin.Context, name string) (int64, error) {
 	n, err := strconv.ParseInt(c.Param(name), 10, 64)
 	if err != nil || n < 1 {

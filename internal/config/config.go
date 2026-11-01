@@ -66,7 +66,7 @@ type CORS struct {
 
 func (c Config) IsProd() bool { return c.Env == "prod" }
 
-// DSN builds a pgx-compatible URL for database/sql.
+// DSN builds a pgx-compatible URL for database/sql
 func (d DB) DSN() string {
 	u := url.URL{
 		Scheme: "postgres",
@@ -83,7 +83,7 @@ func (d DB) DSN() string {
 	return u.String()
 }
 
-// Load reads and validates the environment. It reports every problem at once.
+// Load reads and validates the environment. It reports every problem at once
 func Load() (Config, error) {
 	var l loader
 
@@ -159,7 +159,7 @@ func containsWildcard(s []string) bool {
 	return false
 }
 
-// loader accumulates parse errors so Load can report them together.
+// loader accumulates parse errors so Load can report them together
 type loader struct{ errs []error }
 
 func (l *loader) str(key, def string) string {

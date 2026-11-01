@@ -26,7 +26,7 @@ func init() {
 	}
 }
 
-// RegisterRoutes builds the router: global middleware, probes, then every feature group.
+// RegisterRoutes builds the router: global middleware, probes, then every feature group
 func (s *Server) RegisterRoutes(q *store.Queries) http.Handler {
 	if s.cfg.IsProd() {
 		gin.SetMode(gin.ReleaseMode)
@@ -51,8 +51,8 @@ func (s *Server) registerProbeRoutes(r *gin.Engine) {
 	r.GET("/readyz", s.readiness)
 }
 
-// registerAPIRoutes is the single place feature routes are mounted.
-// Adding a feature = one line here.
+// registerAPIRoutes is the single place feature routes are mounted
+// Adding a feature = one line here
 func (s *Server) registerAPIV1Routes(r *gin.Engine, q *store.Queries) {
 	v1 := r.Group("/api/v1")
 	authn := middleware.Authenticate(s.authSvc)
@@ -64,12 +64,12 @@ func (s *Server) registerAPIV1Routes(r *gin.Engine, q *store.Queries) {
 	// cart.RegisterRoutes(v1, s.carts)
 }
 
-// liveness: process is up. No dependency checks.
+// liveness: process is up. No dependency checks
 func (s *Server) liveness(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-// readiness: dependencies are reachable. Used by orchestrators to gate traffic.
+// readiness: dependencies are reachable. Used by orchestrators to gate traffic
 func (s *Server) readiness(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 	defer cancel()
