@@ -6,6 +6,24 @@ import (
 	"flexgin/internal/store"
 )
 
+type Challenge struct {
+	UserID    string
+	ResendKey string
+	ExpiresAt time.Time
+}
+
+type Session struct {
+	User             store.User `json:"user"`
+	AccessToken      string     `json:"access_token"`
+	RefreshToken     string     `json:"refresh_token"`
+	AccessExpiresAt  time.Time  `json:"access_expires_at"`
+	RefreshExpiresAt time.Time  `json:"refresh_expires_at"`
+}
+
+type isVerifiedRequest struct {
+	Identifier string `form:"identifier" binding:"required,max=254"`
+}
+
 type RequestOTPRequest struct {
 	Identifier string `json:"identifier" binding:"required,max=254"`
 }
@@ -45,6 +63,25 @@ type AuthResponse struct {
 	RefreshExpiresAt time.Time    `json:"refresh_expires_at"`
 	User             UserResponse `json:"user"`
 }
+
+func ptr[T any](v T) *T { return &v }
+
+type PasswordSignupReq struct {
+	Username   string `json:"username" binding:"required,min=3,max=20,alphanumunicode|contains=_"`
+	Identifier string `json:"identifier" binding:"required,max=254"`
+	Password   string `json:"password" binding:"required,min=8,max=72"`
+}
+
+type PasswordSigninReq struct {
+	UsernameOrIdentifier string `json:"username_or_identifier" binding:"required,max=254"`
+	Password             string `json:"password" binding:"required,max=72"`
+}
+
+//
+// type changePasswordReq struct {
+// 	OldPassword string `json:"old_password" binding:"max=72"`
+// 	NewPassword string `json:"new_password" binding:"required,min=8,max=72"`
+// }
 
 func ToChallengeResponse(c Challenge) ChallengeResponse {
 	return ChallengeResponse{UserID: c.UserID, ResendKey: c.ResendKey, ExpiresAt: c.ExpiresAt}
