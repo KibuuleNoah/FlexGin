@@ -4,7 +4,11 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/json"
+	"flexgin/internal/apperror"
 	"fmt"
+	"net/mail"
+	"regexp"
+	"strings"
 )
 
 func PrintPretty(data interface{}) {
@@ -53,4 +57,19 @@ func ToNullBool(b *bool) sql.NullBool {
 		Bool:  *b,
 		Valid: true,
 	}
+}
+
+var phoneRe = regexp.MustCompile(`^\+[1-9][0-9]{6,14}$`)
+
+func NormalizeIdentifier(raw string) (string, error) {
+	v := strings.ToLower(strings.TrimSpace(raw))
+	if a, err := mail.ParseAddress(v); err == nil && a.Address == v {
+		return v, nil
+	}
+	if phoneRe.MatchString(v) {
+		return v, nil
+	}
+	return "", apperror.Validation("validation failed", map[string]string{
+		"identifier": "must be a valid email or E.164 phone number",
+	})
 }
