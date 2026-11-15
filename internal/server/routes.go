@@ -51,8 +51,7 @@ func (s *Server) registerProbeRoutes(r *gin.Engine) {
 	r.GET("/readyz", s.readiness)
 }
 
-// registerAPIRoutes is the single place feature routes are mounted
-// Adding a feature = one line here
+// registerAPIRoutes is were all routes are mounted
 func (s *Server) registerAPIV1Routes(r *gin.Engine, q *store.Queries) {
 	v1 := r.Group("/api/v1")
 	authn := middleware.Authenticate(s.authSvc)

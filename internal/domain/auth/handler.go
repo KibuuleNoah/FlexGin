@@ -92,3 +92,5 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	}
 	httpx.OK(c, ToUserResponse(u))
 }
+
+func (h *AuthHandler) RevokeToken(c *gin.Context) {}

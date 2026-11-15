@@ -161,7 +161,7 @@ func (s *AuthService) VerifyOTP(ctx context.Context, req VerifyOTPRequest) (Sess
 	return s.newSession(ctx, u)
 }
 
-// Refresh rotates: the presented refresh token is revoked and a new pair is issued
+// Refresh rotates the presented refresh token is revoked and a new pair is issued
 func (s *AuthService) Refresh(ctx context.Context, raw string) (Session, error) {
 	old, err := s.q.ClaimRefreshSession(ctx, hashRefresh(raw))
 	if errors.Is(err, sql.ErrNoRows) {
@@ -218,6 +218,8 @@ func (s *AuthService) Me(ctx context.Context, id string) (store.User, error) {
 	}
 	return u, nil
 }
+
+func (h *AuthService) RevokeToken() {}
 
 func (s *AuthService) newSession(ctx context.Context, u store.User) (Session, error) {
 	refresh, hash, err := newRefreshToken()
