@@ -28,13 +28,16 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id string) (User, error)
 	GetUserByIdentifier(ctx context.Context, identifier string) (User, error)
 	GetUserByIdentifierAlt(ctx context.Context, identifierAlt *string) (User, error)
+	GetUserByUsernameOrIdentifier(ctx context.Context, login *string) (User, error)
 	IncrementOTPAttempts(ctx context.Context, id string) error
+	IsUserVerifiedByIdentifierAlt(ctx context.Context, usernameoridentifier *string) (bool, error)
 	ListArticles(ctx context.Context, arg ListArticlesParams) ([]Article, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	MarkUserVerified(ctx context.Context, id string) (User, error)
 	RevokeSession(ctx context.Context, id string) (int64, error)
 	SessionIsActive(ctx context.Context, id string) (bool, error)
 	SetUserBanned(ctx context.Context, arg SetUserBannedParams) (User, error)
+	SetUserPassword(ctx context.Context, arg SetUserPasswordParams) error
 	SetUserRole(ctx context.Context, arg SetUserRoleParams) (User, error)
 	TouchUserLastLogin(ctx context.Context, id string) error
 	UpdateArticle(ctx context.Context, arg UpdateArticleParams) (Article, error)

@@ -19,6 +19,17 @@ SELECT * FROM users WHERE identifier = $1;
 -- name: GetUserByIdentifierAlt :one
 SELECT * FROM users WHERE identifier_alt = $1;
 
+-- name: IsUserVerifiedByIdentifierAlt :one
+SELECT EXISTS (
+    SELECT 1 FROM users
+    WHERE (
+        username       = sqlc.arg(usernameOrIdentifier)
+        OR identifier  = sqlc.arg(usernameOrIdentifier)
+        OR identifier_alt = sqlc.arg(usernameOrIdentifier)
+    )
+    AND verified = TRUE
+) AS verified;
+
 -- name: ListUsers :many
 SELECT * FROM users
 ORDER BY created_at DESC, id DESC
@@ -50,5 +61,16 @@ RETURNING *;
 -- name: TouchUserLastLogin :exec
 UPDATE users SET last_login_at = (extract(epoch FROM now()))::bigint WHERE id = $1;
 
+
+-- name: GetUserByUsernameOrIdentifier :one
+SELECT * FROM users
+WHERE username = sqlc.arg(login)
+   OR identifier = sqlc.arg(login)
+   OR identifier_alt = sqlc.arg(login)
+LIMIT 1;
+
+-- name: SetUserPassword :exec
+UPDATE users SET password_hash = $2 WHERE id = $1;
 -- name: DeleteUser :execrows
 DELETE FROM users WHERE id = $1;
+

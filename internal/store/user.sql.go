@@ -144,6 +144,53 @@ func (q *Queries) GetUserByIdentifierAlt(ctx context.Context, identifierAlt *str
 	return i, err
 }
 
+const getUserByUsernameOrIdentifier = `-- name: GetUserByUsernameOrIdentifier :one
+SELECT id, username, password_hash, identifier, identifier_alt, role, avatar_url, is_banned, verified, created_at, updated_at, last_login_at FROM users
+WHERE username = $1
+   OR identifier = $1
+   OR identifier_alt = $1
+LIMIT 1
+`
+
+func (q *Queries) GetUserByUsernameOrIdentifier(ctx context.Context, login *string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsernameOrIdentifier, login)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.PasswordHash,
+		&i.Identifier,
+		&i.IdentifierAlt,
+		&i.Role,
+		&i.AvatarUrl,
+		&i.IsBanned,
+		&i.Verified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastLoginAt,
+	)
+	return i, err
+}
+
+const isUserVerifiedByIdentifierAlt = `-- name: IsUserVerifiedByIdentifierAlt :one
+SELECT EXISTS (
+    SELECT 1 FROM users
+    WHERE (
+        username       = $1
+        OR identifier  = $1
+        OR identifier_alt = $1
+    )
+    AND verified = TRUE
+) AS verified
+`
+
+func (q *Queries) IsUserVerifiedByIdentifierAlt(ctx context.Context, usernameoridentifier *string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isUserVerifiedByIdentifierAlt, usernameoridentifier)
+	var verified bool
+	err := row.Scan(&verified)
+	return verified, err
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, username, password_hash, identifier, identifier_alt, role, avatar_url, is_banned, verified, created_at, updated_at, last_login_at FROM users
 ORDER BY created_at DESC, id DESC
@@ -244,6 +291,20 @@ func (q *Queries) SetUserBanned(ctx context.Context, arg SetUserBannedParams) (U
 		&i.LastLoginAt,
 	)
 	return i, err
+}
+
+const setUserPassword = `-- name: SetUserPassword :exec
+UPDATE users SET password_hash = $2 WHERE id = $1
+`
+
+type SetUserPasswordParams struct {
+	ID           string  `json:"id"`
+	PasswordHash *string `json:"password_hash"`
+}
+
+func (q *Queries) SetUserPassword(ctx context.Context, arg SetUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, setUserPassword, arg.ID, arg.PasswordHash)
+	return err
 }
 
 const setUserRole = `-- name: SetUserRole :one
