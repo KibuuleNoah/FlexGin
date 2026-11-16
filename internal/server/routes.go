@@ -15,6 +15,7 @@ import (
 
 	_ "flexgin/docs"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/swag"
@@ -34,6 +35,9 @@ func (s *Server) RegisterRoutes(q *store.Queries) http.Handler {
 	httpx.UseJSONFieldNames()
 
 	r := gin.New()
+	r.Use(middleware.PrometheusMiddleware("/metrics", "/healthz", "/readyz"))
+	r.Use(gin.Recovery())
+
 	r.Use(middleware.Global(s.cfg, s.log)...)
 
 	if !s.cfg.IsProd() {
@@ -47,6 +51,7 @@ func (s *Server) RegisterRoutes(q *store.Queries) http.Handler {
 }
 
 func (s *Server) registerProbeRoutes(r *gin.Engine) {
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/healthz", s.liveness)
 	r.GET("/readyz", s.readiness)
 }
