@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'flexgin-backend'
+    static_configs:
+      # 'gin_backend' matches the Docker Compose service name above
+      - targets: ['gin_backend:8080']

@@ -68,12 +68,10 @@ func (s *Server) registerAPIV1Routes(r *gin.Engine, q *store.Queries) {
 	// cart.RegisterRoutes(v1, s.carts)
 }
 
-// liveness: process is up. No dependency checks
 func (s *Server) liveness(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-// readiness: dependencies are reachable. Used by orchestrators to gate traffic
 func (s *Server) readiness(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 	defer cancel()

@@ -1,15 +1,113 @@
 services:
-  psql_bp:
-    image: postgres:latest
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: flexgin_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${BLUEPRINT_DB_DATABASE}
-      POSTGRES_USER: ${BLUEPRINT_DB_USERNAME}
-      POSTGRES_PASSWORD: ${BLUEPRINT_DB_PASSWORD}
-    ports:
-      - "${BLUEPRINT_DB_PORT}:5432"
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     volumes:
-      - psql_volume_bp:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flexgin_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  flexgin_backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    container_name: flexgin_backup
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres_db
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+      - SCHEDULE=* * * * *
+      - BACKUP_KEEP_DAYS=7
+    volumes:
+      - /home/kibuulenoah/MyDevWorkSpace/VOLS/flexgin:/backups
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - flexgin_network
+
+  goose_migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flexgin_migrations
+    command: goose -dir ./migrations postgres "host=postgres_db user=${DB_USERNAME} password=${DB_PASSWORD} dbname=${DB_DATABASE} sslmode=disable" up
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - flexgin_network
+
+  gin_backend:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flexgin_backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
+      - GIN_MODE=release
+      - DB_HOST=postgres_db
+      - DB_PORT=5432
+      - DB_USER=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_DATABASE}
+      - DB_SSLMODE=${DB_SSLMODE}
+    depends_on:
+      goose_migrations:
+        condition: service_completed_successfully
+    networks:
+      - flexgin_network
+
+  prometheus:
+      image: prom/prometheus:latest
+      container_name: flexgin_prometheus
+      restart: unless-stopped
+      ports:
+        - "127.0.0.1:9090:9090"
+      volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml
+        - prometheus_data:/prometheus
+      networks:
+        - flexgin_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: flexgin_grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - flexgin_network
 
 volumes:
-  psql_volume_bp:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  flexgin_network:
+    # external: true

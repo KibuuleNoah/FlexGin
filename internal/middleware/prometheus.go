@@ -42,8 +42,6 @@ func init() {
 	prometheus.MustRegister(httpInFlightRequests)
 }
 
-// PrometheusMiddleware returns a hardened Gin middleware for production telemetry.
-// ignoredPaths allows you to skip metrics tracking for system routes (e.g., /metrics, /healthz).
 func PrometheusMiddleware(ignoredPaths ...string) gin.HandlerFunc {
 	ignoreMap := make(map[string]bool, len(ignoredPaths))
 	for _, p := range ignoredPaths {
@@ -70,8 +68,6 @@ func PrometheusMiddleware(ignoredPaths ...string) gin.HandlerFunc {
 		status := strconv.Itoa(c.Writer.Status())
 		method := c.Request.Method
 
-		// CRITICAL: Use c.FullPath() to get the registered route pattern (e.g. /api/v1/users/:id)
-		// rather than the raw URL path, protecting against high cardinality memory leaks.
 		routePath := c.FullPath()
 		if routePath == "" {
 			routePath = "unmatched"
